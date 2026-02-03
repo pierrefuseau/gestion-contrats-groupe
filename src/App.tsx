@@ -1,28 +1,25 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Layout } from './components/layout';
 import { DataProvider } from './contexts/DataContext';
-import {
-  Dashboard,
-  ProductList,
-  ProductDetail,
-  PartnerDetail,
-  ContractForm,
-  AlertsCenter
-} from './pages';
+import { Home } from './pages/Home';
+import { SupplierList } from './pages/SupplierList';
+import { SupplierDetail } from './pages/SupplierDetail';
+import { ClientList } from './pages/ClientList';
+import { ClientDetail } from './pages/ClientDetail';
+import { ProductListNew } from './pages/ProductListNew';
+import { ProductDetailNew } from './pages/ProductDetailNew';
 
 function App() {
   return (
     <DataProvider>
       <BrowserRouter>
         <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/product/:sku" element={<ProductDetail />} />
-            <Route path="/partner/:id" element={<PartnerDetail />} />
-            <Route path="/contracts/new" element={<ContractForm />} />
-            <Route path="/alerts" element={<AlertsCenter />} />
-          </Route>
+          <Route path="/" element={<Home />} />
+          <Route path="/fournisseurs" element={<SupplierList />} />
+          <Route path="/fournisseurs/:code" element={<SupplierDetail />} />
+          <Route path="/clients" element={<ClientList />} />
+          <Route path="/clients/:code" element={<ClientDetail />} />
+          <Route path="/produits" element={<ProductListNew />} />
+          <Route path="/produits/:sku" element={<ProductDetailNew />} />
         </Routes>
       </BrowserRouter>
     </DataProvider>
