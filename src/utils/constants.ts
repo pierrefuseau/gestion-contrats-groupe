@@ -1,10 +1,7 @@
 export const UI_STRINGS = {
-  nav_dashboard: 'Tableau de bord',
+  nav_suppliers: 'Fournisseurs',
+  nav_clients: 'Clients',
   nav_products: 'Produits',
-  nav_contracts: 'Contrats',
-  nav_partners: 'Partenaires',
-  nav_timeline: 'Planning',
-  nav_alerts: 'Alertes',
 
   status_long: 'EXCÉDENT',
   status_short: 'DÉFICIT',
@@ -15,7 +12,6 @@ export const UI_STRINGS = {
   urgency_surveillance: 'SURVEILLANCE',
   urgency_ok: 'OK',
 
-  action_new_contract: 'Nouveau contrat',
   action_export: 'Exporter',
   action_filter: 'Filtrer',
   action_search: 'Rechercher...',
@@ -70,11 +66,6 @@ export const UI_STRINGS = {
 
   contract_type_supplier: 'Contrat Fournisseur',
   contract_type_client: 'Contrat Client',
-
-  delivery_status_scheduled: 'Planifiée',
-  delivery_status_in_transit: 'En transit',
-  delivery_status_delivered: 'Livrée',
-  delivery_status_delayed: 'Retardée',
 } as const;
 
 export const CATEGORIES = [
