@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
-import { initializeData, syncFromGoogleSheets, onSyncError } from '../services/syncService';
+import { initializeData, syncFromGoogleSheets } from '../services/syncService';
 import { buildSearchIndexesFromData } from '../services/searchEngine';
 import { calculateAllPositions, getPartners } from '../utils/calculations';
 import { buildContractIndexes, buildArticleIndex, buildPositionIndex, buildPartnerIndex } from '../services/dataIndex';
@@ -16,11 +16,9 @@ interface DataContextType {
   isLoading: boolean;
   isReady: boolean;
   error: Error | null;
-  syncError: string | null;
   lastUpdated: Date | null;
   refresh: () => Promise<void>;
   forceRefresh: () => Promise<void>;
-  dismissSyncError: () => void;
   getArticleBySku: (sku: string) => Article | undefined;
   getSupplierContractsBySku: (sku: string) => SupplierContract[];
   getClientContractsBySku: (sku: string) => ClientContract[];
@@ -37,7 +35,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const updateData = useCallback((data: { articles: Article[]; supplierContracts: SupplierContract[]; clientContracts: ClientContract[] }) => {
@@ -78,9 +75,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [updateData]);
 
   useEffect(() => {
-    onSyncError((errorMessage) => {
-      setSyncError(errorMessage);
-    });
     loadData(false);
   }, [loadData]);
 
@@ -106,10 +100,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const forceRefresh = useCallback(async () => {
     await loadData(true);
   }, [loadData]);
-
-  const dismissSyncError = useCallback(() => {
-    setSyncError(null);
-  }, []);
 
   const partners = useMemo(
     () => getPartners(supplierContracts, clientContracts),
@@ -188,11 +178,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       isLoading,
       isReady,
       error,
-      syncError,
       lastUpdated,
       refresh,
       forceRefresh,
-      dismissSyncError,
       getArticleBySku,
       getSupplierContractsBySku,
       getClientContractsBySku,

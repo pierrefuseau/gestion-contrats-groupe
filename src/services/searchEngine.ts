@@ -1,5 +1,4 @@
 import Fuse, { type IFuseOptions } from 'fuse.js';
-import { getAllData } from './supabaseDataService';
 import type { Article, SupplierContract, ClientContract } from '../types';
 
 export interface SearchResult {
@@ -43,46 +42,6 @@ const FUSE_OPTIONS_PRODUCTS: IFuseOptions<Article> = {
   includeScore: true,
   ignoreLocation: true,
 };
-
-export async function refreshSearchIndexes(): Promise<void> {
-  console.log('Construction des index de recherche...');
-  const startTime = performance.now();
-
-  const { articles, supplierContracts, clientContracts } = await getAllData();
-
-  uniqueSuppliers.clear();
-  supplierContracts.forEach(c => {
-    if (!uniqueSuppliers.has(c.supplier_code)) {
-      uniqueSuppliers.set(c.supplier_code, {
-        code: c.supplier_code,
-        name: c.supplier_name
-      });
-    }
-  });
-
-  uniqueClients.clear();
-  clientContracts.forEach(c => {
-    if (!uniqueClients.has(c.client_code)) {
-      uniqueClients.set(c.client_code, {
-        code: c.client_code,
-        name: c.client_name
-      });
-    }
-  });
-
-  allArticles = articles;
-
-  fuseSuppliers = new Fuse(Array.from(uniqueSuppliers.values()), FUSE_OPTIONS_ENTITIES);
-  fuseClients = new Fuse(Array.from(uniqueClients.values()), FUSE_OPTIONS_ENTITIES);
-  fuseProducts = new Fuse(allArticles, FUSE_OPTIONS_PRODUCTS);
-
-  const endTime = performance.now();
-  console.log(`Index crees en ${(endTime - startTime).toFixed(1)}ms:`, {
-    suppliers: uniqueSuppliers.size,
-    clients: uniqueClients.size,
-    products: allArticles.length
-  });
-}
 
 export function buildSearchIndexesFromData(
   articles: Article[],
