@@ -1,28 +1,16 @@
 import { useMemo } from 'react';
 import type { Article, SupplierContract, ClientContract, PositionSummary } from '../types';
-import { calculateNetPosition, getRiskScores, getAverageMargin, getTotalCommittedValue } from '../utils/calculations';
+import { calculatePosition, calculateAllPositions } from '../utils/calculations';
 
 export function usePositions(
   articles: Article[],
   supplierContracts: SupplierContract[],
   clientContracts: ClientContract[]
 ) {
-  const positions = useMemo(() => {
-    return articles.map(article => {
-      const articleSupplierContracts = supplierContracts.filter(
-        c => c.sku === article.sku
-      );
-      const articleClientContracts = clientContracts.filter(
-        c => c.sku === article.sku
-      );
-
-      return calculateNetPosition(
-        article,
-        articleSupplierContracts,
-        articleClientContracts
-      );
-    });
-  }, [articles, supplierContracts, clientContracts]);
+  const positions = useMemo(
+    () => calculateAllPositions(articles, supplierContracts, clientContracts),
+    [articles, supplierContracts, clientContracts]
+  );
 
   const stats = useMemo(() => {
     const shortPositions = positions.filter(p => p.status === 'SHORT');
@@ -30,22 +18,27 @@ export function usePositions(
     const activeSupplierContracts = supplierContracts.filter(c => c.status === 'active');
     const activeClientContracts = clientContracts.filter(c => c.status === 'active');
 
+    const totalCommittedValue = positions.reduce((sum, p) => {
+      return sum + Math.abs(p.net_position_kg * (p.avg_sell_price || p.avg_buy_price || 0));
+    }, 0);
+
+    const avgMargin = positions.length > 0
+      ? positions.reduce((sum, p) => sum + (p.margin_percent || 0), 0) / positions.length
+      : 0;
+
     return {
       totalProducts: positions.length,
       shortCount: shortPositions.length,
       criticalCount: criticalPositions.length,
       activeContracts: activeSupplierContracts.length + activeClientContracts.length,
-      totalCommittedValue: getTotalCommittedValue(positions),
-      averageMargin: getAverageMargin(positions)
+      totalCommittedValue,
+      averageMargin: avgMargin
     };
   }, [positions, supplierContracts, clientContracts]);
 
-  const riskScores = useMemo(() => getRiskScores(positions), [positions]);
-
   return {
     positions,
-    stats,
-    riskScores
+    stats
   };
 }
 
@@ -59,17 +52,9 @@ export function usePositionBySku(
     const article = articles.find(a => a.sku === sku);
     if (!article) return null;
 
-    const articleSupplierContracts = supplierContracts.filter(
-      c => c.sku === sku
-    );
-    const articleClientContracts = clientContracts.filter(
-      c => c.sku === sku
-    );
+    const articleSupplierContracts = supplierContracts.filter(c => c.sku === sku);
+    const articleClientContracts = clientContracts.filter(c => c.sku === sku);
 
-    return calculateNetPosition(
-      article,
-      articleSupplierContracts,
-      articleClientContracts
-    );
+    return calculatePosition(article, articleSupplierContracts, articleClientContracts);
   }, [sku, articles, supplierContracts, clientContracts]);
 }

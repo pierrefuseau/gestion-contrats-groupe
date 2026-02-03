@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, Check, Eye, Filter, ExternalLink } from 'lucide-react';
+import { Bell, Eye, Filter, ExternalLink } from 'lucide-react';
 import { Card, DataTable, type Column } from '../components/common';
 import { Button } from '../components/common/Button';
 import { useAlerts } from '../hooks/useAlerts';
@@ -13,20 +13,18 @@ export function AlertsCenter() {
     alerts,
     unreadCount,
     markAsRead,
-    markAsResolved,
     markAllAsRead
   } = useAlerts();
 
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [severityFilter, setSeverityFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unread' | 'unresolved'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unread'>('all');
 
   const filteredAlerts = useMemo(() => {
     return alerts.filter(alert => {
       if (typeFilter && alert.type !== typeFilter) return false;
       if (severityFilter && alert.severity !== severityFilter) return false;
       if (statusFilter === 'unread' && alert.is_read) return false;
-      if (statusFilter === 'unresolved' && alert.is_resolved) return false;
       return true;
     });
   }, [alerts, typeFilter, severityFilter, statusFilter]);
@@ -59,7 +57,7 @@ export function AlertsCenter() {
     },
     {
       key: 'severity',
-      header: 'Sévérité',
+      header: 'Severite',
       width: '100px',
       sortable: true,
       getValue: a => {
@@ -97,7 +95,7 @@ export function AlertsCenter() {
           </p>
           {a.sku && (
             <Link
-              to={`/product/${a.sku}`}
+              to={`/produits/${a.sku}`}
               className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 hover:underline"
               onClick={e => e.stopPropagation()}
             >
@@ -114,18 +112,13 @@ export function AlertsCenter() {
       width: '120px',
       render: a => (
         <div className="flex items-center gap-2">
-          {!a.is_read && (
+          {!a.is_read ? (
             <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
               Non lu
             </span>
-          )}
-          {a.is_resolved ? (
-            <span className="px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded">
-              Résolu
-            </span>
           ) : (
             <span className="px-1.5 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 rounded">
-              Actif
+              Lu
             </span>
           )}
         </div>
@@ -134,7 +127,7 @@ export function AlertsCenter() {
     {
       key: 'actions',
       header: 'Actions',
-      width: '120px',
+      width: '80px',
       render: a => (
         <div className="flex items-center gap-1">
           {!a.is_read && (
@@ -149,29 +142,15 @@ export function AlertsCenter() {
               <Eye className="w-4 h-4" />
             </button>
           )}
-          {!a.is_resolved && (
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                markAsResolved(a.id);
-              }}
-              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-              title="Marquer comme résolu"
-            >
-              <Check className="w-4 h-4" />
-            </button>
-          )}
         </div>
       )
     }
   ];
 
   const alertTypes = [
-    { value: 'position_short', label: 'Position déficitaire' },
+    { value: 'position_short', label: 'Position deficitaire' },
     { value: 'position_critical', label: 'Position critique' },
-    { value: 'delivery_delayed', label: 'Livraison retardée' },
-    { value: 'contract_expiring', label: 'Contrat expirant' },
-    { value: 'threshold_breach', label: 'Seuil franchi' }
+    { value: 'contract_expiring', label: 'Contrat expirant' }
   ];
 
   const clearFilters = () => {
@@ -223,7 +202,7 @@ export function AlertsCenter() {
             onChange={e => setSeverityFilter(e.target.value)}
             className="h-9 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
           >
-            <option value="">Toutes sévérités</option>
+            <option value="">Toutes severites</option>
             <option value="critical">Critique</option>
             <option value="warning">Attention</option>
             <option value="info">Info</option>
@@ -250,16 +229,6 @@ export function AlertsCenter() {
             >
               Non lues
             </button>
-            <button
-              onClick={() => setStatusFilter('unresolved')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                statusFilter === 'unresolved'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Non résolues
-            </button>
           </div>
 
           {hasFilters && (
@@ -283,7 +252,7 @@ export function AlertsCenter() {
       </Card>
 
       <div className="text-sm text-slate-500 text-center">
-        {filteredAlerts.length} alerte{filteredAlerts.length > 1 ? 's' : ''} affichée{filteredAlerts.length > 1 ? 's' : ''}
+        {filteredAlerts.length} alerte{filteredAlerts.length > 1 ? 's' : ''} affichee{filteredAlerts.length > 1 ? 's' : ''}
         {hasFilters && ` sur ${alerts.length}`}
       </div>
     </div>

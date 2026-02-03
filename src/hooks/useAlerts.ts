@@ -1,22 +1,16 @@
 import { useMemo, useState, useCallback } from 'react';
 import type { Alert } from '../types';
-import { alerts as mockAlerts } from '../services/mockData';
 
 export function useAlerts() {
-  const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   const unreadCount = useMemo(
     () => alerts.filter(a => !a.is_read).length,
     [alerts]
   );
 
-  const unresolvedAlerts = useMemo(
-    () => alerts.filter(a => !a.is_resolved),
-    [alerts]
-  );
-
   const criticalAlerts = useMemo(
-    () => alerts.filter(a => a.severity === 'critical' && !a.is_resolved),
+    () => alerts.filter(a => a.severity === 'critical'),
     [alerts]
   );
 
@@ -33,12 +27,6 @@ export function useAlerts() {
     );
   }, []);
 
-  const markAsResolved = useCallback((alertId: string) => {
-    setAlerts(prev =>
-      prev.map(a => (a.id === alertId ? { ...a, is_resolved: true, is_read: true } : a))
-    );
-  }, []);
-
   const markAllAsRead = useCallback(() => {
     setAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
   }, []);
@@ -46,11 +34,9 @@ export function useAlerts() {
   return {
     alerts,
     unreadCount,
-    unresolvedAlerts,
     criticalAlerts,
     recentAlerts,
     markAsRead,
-    markAsResolved,
     markAllAsRead
   };
 }

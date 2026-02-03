@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
 import { Card } from '../components/common';

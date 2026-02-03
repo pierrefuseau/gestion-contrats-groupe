@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import Fuse from 'fuse.js';
 import type { Article, Partner, SupplierContract } from '../types';
 
@@ -16,13 +16,30 @@ export function useSearch(
   supplierContracts: SupplierContract[]
 ) {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 100);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [query]);
 
   const productFuse = useMemo(() => new Fuse(articles, {
     keys: [
       { name: 'name', weight: 1.0 },
-      { name: 'sku', weight: 0.8 },
-      { name: 'category', weight: 0.5 }
+      { name: 'sku', weight: 0.8 }
     ],
     threshold: 0.4,
     includeScore: true
@@ -47,37 +64,38 @@ export function useSearch(
   }), [supplierContracts]);
 
   const results = useMemo((): SearchResult[] => {
-    if (query.length < 2) return [];
+    if (debouncedQuery.length < 2) return [];
 
-    const productResults = productFuse.search(query).slice(0, 4).map(result => ({
+    const productResults = productFuse.search(debouncedQuery).slice(0, 4).map(result => ({
       type: 'product' as const,
       id: result.item.sku,
       title: result.item.name,
       subtitle: result.item.sku,
-      link: `/product/${encodeURIComponent(result.item.sku)}`
+      link: `/produits/${encodeURIComponent(result.item.sku)}`
     }));
 
-    const partnerResults = partnerFuse.search(query).slice(0, 3).map(result => ({
+    const partnerResults = partnerFuse.search(debouncedQuery).slice(0, 3).map(result => ({
       type: 'partner' as const,
-      id: result.item.id,
+      id: result.item.code,
       title: result.item.name,
-      subtitle: `${result.item.type === 'supplier' ? 'Fournisseur' : result.item.type === 'client' ? 'Client' : 'Les deux'} - ${result.item.code}`,
-      link: `/partner/${result.item.id}`
+      subtitle: `${result.item.type === 'supplier' ? 'Fournisseur' : 'Client'} - ${result.item.code}`,
+      link: `/partenaires/${result.item.type === 'supplier' ? 'fournisseur' : 'client'}/${result.item.code}`
     }));
 
-    const contractResults = contractFuse.search(query).slice(0, 3).map(result => ({
+    const contractResults = contractFuse.search(debouncedQuery).slice(0, 3).map(result => ({
       type: 'contract' as const,
-      id: result.item.id,
-      title: `${result.item.supplier_name}`,
-      subtitle: `Contrat: ${result.item.supplier_sku}`,
-      link: `/product/${encodeURIComponent(result.item.sku)}`
+      id: `${result.item.supplier_code}-${result.item.sku}`,
+      title: result.item.supplier_name,
+      subtitle: `Contrat: ${result.item.supplier_sku || result.item.sku}`,
+      link: `/produits/${encodeURIComponent(result.item.sku)}`
     }));
 
     return [...productResults, ...partnerResults, ...contractResults];
-  }, [query, productFuse, partnerFuse, contractFuse]);
+  }, [debouncedQuery, productFuse, partnerFuse, contractFuse]);
 
   const clearSearch = useCallback(() => {
     setQuery('');
+    setDebouncedQuery('');
     setIsOpen(false);
   }, []);
 
@@ -98,8 +116,7 @@ export function useArticleSearch() {
     const fuse = new Fuse(items, {
       keys: [
         { name: 'name', weight: 1.0 },
-        { name: 'sku', weight: 0.8 },
-        { name: 'category', weight: 0.5 }
+        { name: 'sku', weight: 0.8 }
       ],
       threshold: 0.4
     });
@@ -111,7 +128,7 @@ export function useArticleSearch() {
 export function usePartnerSearch(type?: 'supplier' | 'client') {
   return useCallback(
     (items: Partner[], query: string) => {
-      const filtered = type ? items.filter(p => p.type === type || p.type === 'both') : items;
+      const filtered = type ? items.filter(p => p.type === type) : items;
 
       if (query.length < 2) return filtered.slice(0, 10);
 
