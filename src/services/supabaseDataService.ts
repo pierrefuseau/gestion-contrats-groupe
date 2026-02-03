@@ -143,23 +143,37 @@ export async function clearAllData(): Promise<void> {
   ]);
 }
 
+const BATCH_SIZE = 500;
+
+async function batchOperation<T>(
+  items: T[],
+  operation: (batch: T[]) => Promise<void>
+): Promise<void> {
+  for (let i = 0; i < items.length; i += BATCH_SIZE) {
+    const batch = items.slice(i, i + BATCH_SIZE);
+    await operation(batch);
+  }
+}
+
 export async function upsertArticles(articles: Article[]): Promise<void> {
   if (articles.length === 0) return;
 
-  const { error } = await supabase
-    .from('articles')
-    .upsert(
-      articles.map(a => ({
-        sku: a.sku,
-        name: a.name,
-        stock_uvc: a.stock_uvc,
-        stock_kg: a.stock_kg,
-        updated_at: new Date().toISOString()
-      })),
-      { onConflict: 'sku' }
-    );
+  await batchOperation(articles, async (batch) => {
+    const { error } = await supabase
+      .from('articles')
+      .upsert(
+        batch.map(a => ({
+          sku: a.sku,
+          name: a.name,
+          stock_uvc: Math.round(a.stock_uvc),
+          stock_kg: a.stock_kg,
+          updated_at: new Date().toISOString()
+        })),
+        { onConflict: 'sku' }
+      );
 
-  if (error) throw error;
+    if (error) throw error;
+  });
 }
 
 export async function upsertSupplierContracts(contracts: SupplierContract[]): Promise<void> {
@@ -167,32 +181,34 @@ export async function upsertSupplierContracts(contracts: SupplierContract[]): Pr
 
   await supabase.from('supplier_contracts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
-  const { error } = await supabase
-    .from('supplier_contracts')
-    .insert(
-      contracts.map(c => ({
-        supplier_code: c.supplier_code,
-        supplier_name: c.supplier_name,
-        sku: c.sku,
-        supplier_sku: c.supplier_sku || null,
-        article_name: c.article_name,
-        price_buy: c.price_buy,
-        date_start: c.date_start || null,
-        date_end: c.date_end || null,
-        qty_contracted_uvc: c.qty_contracted_uvc,
-        qty_contracted_kg: c.qty_contracted_kg,
-        qty_ordered_uvc: c.qty_ordered_uvc,
-        qty_received_uvc: c.qty_received_uvc,
-        qty_in_transit_uvc: c.qty_in_transit_uvc,
-        qty_remaining_uvc: c.qty_remaining_uvc,
-        qty_remaining_kg: c.qty_remaining_kg,
-        qty_in_transit_kg: c.qty_in_transit_kg,
-        status: c.status,
-        updated_at: new Date().toISOString()
-      }))
-    );
+  await batchOperation(contracts, async (batch) => {
+    const { error } = await supabase
+      .from('supplier_contracts')
+      .insert(
+        batch.map(c => ({
+          supplier_code: c.supplier_code,
+          supplier_name: c.supplier_name,
+          sku: c.sku,
+          supplier_sku: c.supplier_sku || null,
+          article_name: c.article_name,
+          price_buy: c.price_buy,
+          date_start: c.date_start || null,
+          date_end: c.date_end || null,
+          qty_contracted_uvc: Math.round(c.qty_contracted_uvc),
+          qty_contracted_kg: c.qty_contracted_kg,
+          qty_ordered_uvc: Math.round(c.qty_ordered_uvc),
+          qty_received_uvc: Math.round(c.qty_received_uvc),
+          qty_in_transit_uvc: Math.round(c.qty_in_transit_uvc),
+          qty_remaining_uvc: Math.round(c.qty_remaining_uvc),
+          qty_remaining_kg: c.qty_remaining_kg,
+          qty_in_transit_kg: c.qty_in_transit_kg,
+          status: c.status,
+          updated_at: new Date().toISOString()
+        }))
+      );
 
-  if (error) throw error;
+    if (error) throw error;
+  });
 }
 
 export async function upsertClientContracts(contracts: ClientContract[]): Promise<void> {
@@ -200,28 +216,30 @@ export async function upsertClientContracts(contracts: ClientContract[]): Promis
 
   await supabase.from('client_contracts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
-  const { error } = await supabase
-    .from('client_contracts')
-    .insert(
-      contracts.map(c => ({
-        contract_id: c.contract_id,
-        client_code: c.client_code,
-        client_name: c.client_name,
-        sku: c.sku,
-        article_name: c.article_name,
-        date_start: c.date_start || null,
-        date_end: c.date_end || null,
-        price_sell: c.price_sell,
-        qty_contracted_uvc: c.qty_contracted_uvc,
-        qty_contracted_kg: c.qty_contracted_kg,
-        qty_purchased_uvc: c.qty_purchased_uvc,
-        qty_purchased_kg: c.qty_purchased_kg,
-        qty_remaining_uvc: c.qty_remaining_uvc,
-        qty_remaining_kg: c.qty_remaining_kg,
-        status: c.status,
-        updated_at: new Date().toISOString()
-      }))
-    );
+  await batchOperation(contracts, async (batch) => {
+    const { error } = await supabase
+      .from('client_contracts')
+      .insert(
+        batch.map(c => ({
+          contract_id: c.contract_id,
+          client_code: c.client_code,
+          client_name: c.client_name,
+          sku: c.sku,
+          article_name: c.article_name,
+          date_start: c.date_start || null,
+          date_end: c.date_end || null,
+          price_sell: c.price_sell,
+          qty_contracted_uvc: Math.round(c.qty_contracted_uvc),
+          qty_contracted_kg: c.qty_contracted_kg,
+          qty_purchased_uvc: Math.round(c.qty_purchased_uvc),
+          qty_purchased_kg: c.qty_purchased_kg,
+          qty_remaining_uvc: Math.round(c.qty_remaining_uvc),
+          qty_remaining_kg: c.qty_remaining_kg,
+          status: c.status,
+          updated_at: new Date().toISOString()
+        }))
+      );
 
-  if (error) throw error;
+    if (error) throw error;
+  });
 }

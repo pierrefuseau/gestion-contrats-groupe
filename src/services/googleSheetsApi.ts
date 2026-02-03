@@ -16,6 +16,10 @@ function parseNumber(value: unknown): number {
   return isNaN(num) ? 0 : num;
 }
 
+function parseInteger(value: unknown): number {
+  return Math.round(parseNumber(value));
+}
+
 function parseDate(value: unknown): string {
   if (!value) return '';
   const str = String(value).trim();
@@ -59,7 +63,7 @@ export async function fetchArticles(): Promise<Article[]> {
     .map(row => ({
       sku: parseString(row[0]),
       name: parseString(row[1]),
-      stock_uvc: parseNumber(row[2]),
+      stock_uvc: parseInteger(row[2]),
       stock_kg: parseNumber(row[3])
     }))
     .filter(a => a.sku !== '');
@@ -78,13 +82,13 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
       const price_buy = parseNumber(row[5]);
       const date_start = parseDate(row[6]);
       const date_end = parseDate(row[7]);
-      const qty_contracted_uvc = parseNumber(row[8]);
+      const qty_contracted_uvc = parseInteger(row[8]);
       const qty_contracted_kg = parseNumber(row[9]);
-      const qty_ordered_uvc = parseNumber(row[10]);
-      const qty_received_uvc = parseNumber(row[11]);
-      const qty_in_transit_uvc = parseNumber(row[12]);
+      const qty_ordered_uvc = parseInteger(row[10]);
+      const qty_received_uvc = parseInteger(row[11]);
+      const qty_in_transit_uvc = parseInteger(row[12]);
 
-      const qty_remaining_uvc = Math.max(0, qty_contracted_uvc - qty_ordered_uvc);
+      const qty_remaining_uvc = Math.round(Math.max(0, qty_contracted_uvc - qty_ordered_uvc));
       const conversionFactor = qty_contracted_uvc > 0 ? qty_contracted_kg / qty_contracted_uvc : 0;
       const qty_remaining_kg = qty_remaining_uvc * conversionFactor;
       const qty_in_transit_kg = qty_in_transit_uvc * conversionFactor;
@@ -127,12 +131,12 @@ export async function fetchClientContracts(): Promise<ClientContract[]> {
       const date_start = parseDate(row[5]);
       const date_end = parseDate(row[6]);
       const price_sell = parseNumber(row[7]);
-      const qty_contracted_uvc = parseNumber(row[8]);
+      const qty_contracted_uvc = parseInteger(row[8]);
       const qty_contracted_kg = parseNumber(row[9]);
-      const qty_purchased_uvc = parseNumber(row[10]);
+      const qty_purchased_uvc = parseInteger(row[10]);
       const qty_purchased_kg = parseNumber(row[11]);
 
-      const qty_remaining_uvc = Math.max(0, qty_contracted_uvc - qty_purchased_uvc);
+      const qty_remaining_uvc = Math.round(Math.max(0, qty_contracted_uvc - qty_purchased_uvc));
       const qty_remaining_kg = Math.max(0, qty_contracted_kg - qty_purchased_kg);
 
       const status = calculateStatus(qty_remaining_uvc, qty_remaining_kg);
