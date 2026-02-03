@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, AlertTriangle, TrendingUp, TrendingDown, Warehouse, Factory, Users, Scale } from 'lucide-react';
 import { useData } from '../contexts/DataContext';

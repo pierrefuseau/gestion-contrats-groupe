@@ -9,11 +9,6 @@ interface DataResponse {
   source: 'supabase' | 'google_sheets';
 }
 
-interface SyncLogEntry {
-  synced_at: string;
-  source: string;
-}
-
 async function getLastSyncTime(): Promise<Date | null> {
   const { data } = await supabase
     .from('data_sync_log')
