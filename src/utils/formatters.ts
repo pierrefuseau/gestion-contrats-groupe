@@ -90,3 +90,64 @@ export function formatRelativeDate(isoDate: string): string {
 
   return formatDate(isoDate);
 }
+
+const UNIT_MAP: Record<string, string> = {
+  'kg': 'kg',
+  'kilo': 'kg',
+  'kilogramme': 'kg',
+  'kilogrammes': 'kg',
+  'uvc': 'pce',
+  'unité': 'pce',
+  'unite': 'pce',
+  'pièce': 'pce',
+  'piece': 'pce',
+  'pièces': 'pce',
+  'pieces': 'pce',
+  'pce': 'pce',
+  'l': 'L',
+  'litre': 'L',
+  'litres': 'L',
+  't': 'T',
+  'tonne': 'T',
+  'tonnes': 'T',
+  'carton': 'crt',
+  'crt': 'crt',
+  'palette': 'pal',
+  'pal': 'pal',
+};
+
+export function normalizeUnit(unit: string): string {
+  if (!unit) return 'kg';
+  const unitLower = unit.toLowerCase().trim();
+  return UNIT_MAP[unitLower] || unit;
+}
+
+export function formatPriceWithUnit(price: number, unit: string): string {
+  const formattedPrice = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4
+  }).format(price);
+
+  const normalizedUnit = normalizeUnit(unit);
+  return `${formattedPrice}/${normalizedUnit}`;
+}
+
+export function isPriceByWeight(unit: string): boolean {
+  if (!unit) return true;
+  const unitLower = unit.toLowerCase().trim();
+  return ['kg', 'kilo', 'kilogramme', 'kilogrammes', 't', 'tonne', 'tonnes'].includes(unitLower);
+}
+
+export function calculateTotalValue(
+  price: number,
+  unit: string,
+  qtyKg: number,
+  qtyUvc: number
+): number {
+  if (isPriceByWeight(unit)) {
+    return price * qtyKg;
+  }
+  return price * qtyUvc;
+}

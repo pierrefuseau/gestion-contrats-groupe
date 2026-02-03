@@ -98,13 +98,14 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
       const supplier_sku = parseString(row[3]);
       const article_name = parseString(row[4]);
       const price_buy = parseNumber(row[5]);
-      const date_start = parseDate(row[6]);
-      const date_end = parseDate(row[7]);
-      const qty_contracted_uvc = parseInteger(row[8]);
-      const qty_contracted_kg = parseNumber(row[9]);
-      const qty_ordered_uvc = parseInteger(row[10]);
-      const qty_received_uvc = parseInteger(row[11]);
-      const qty_in_transit_uvc = parseInteger(row[12]);
+      const price_unit = parseString(row[6]) || 'KG';
+      const date_start = parseDate(row[7]);
+      const date_end = parseDate(row[8]);
+      const qty_contracted_uvc = parseInteger(row[9]);
+      const qty_contracted_kg = parseNumber(row[10]);
+      const qty_ordered_uvc = parseInteger(row[11]);
+      const qty_received_uvc = parseInteger(row[12]);
+      const qty_in_transit_uvc = parseInteger(row[13]);
 
       const qty_remaining_uvc = Math.round(Math.max(0, qty_contracted_uvc - qty_ordered_uvc));
       const conversionFactor = qty_contracted_uvc > 0 ? qty_contracted_kg / qty_contracted_uvc : 0;
@@ -120,6 +121,7 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
         supplier_sku,
         article_name,
         price_buy,
+        price_unit,
         date_start,
         date_end,
         qty_contracted_uvc,

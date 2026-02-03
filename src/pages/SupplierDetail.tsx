@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Factory, FileText, Scale, Euro, Package, AlertTriangle } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { formatPriceWithUnit, calculateTotalValue } from '../utils/formatters';
 
 export function SupplierDetail() {
   const { code } = useParams<{ code: string }>();
@@ -24,7 +25,12 @@ export function SupplierDetail() {
   const stats = useMemo(() => ({
     contractsCount: activeContracts.length,
     totalKg: activeContracts.reduce((sum, c) => sum + c.qty_remaining_kg, 0),
-    totalValue: activeContracts.reduce((sum, c) => sum + (c.qty_remaining_kg * c.price_buy), 0)
+    totalValue: activeContracts.reduce((sum, c) => sum + calculateTotalValue(
+      c.price_buy,
+      c.price_unit,
+      c.qty_remaining_kg,
+      c.qty_remaining_uvc
+    ), 0)
   }), [activeContracts]);
 
   const formatWeight = (kg: number) => {
@@ -137,7 +143,7 @@ export function SupplierDetail() {
                   </span>
                   <span className="text-muted">|</span>
                   <span className="text-primary">
-                    Prix: <strong>{formatPrice(contract.price_buy)}/kg</strong>
+                    Prix: <strong>{formatPriceWithUnit(contract.price_buy, contract.price_unit)}</strong>
                   </span>
                   {contract.qty_in_transit_kg > 0 && (
                     <>

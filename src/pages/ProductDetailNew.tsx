@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, AlertTriangle, TrendingUp, TrendingDown, Warehouse, Factory, Users, Scale } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { formatPriceWithUnit } from '../utils/formatters';
 
 export function ProductDetailNew() {
   const { sku } = useParams<{ sku: string }>();
@@ -199,7 +200,7 @@ export function ProductDetailNew() {
                     </span>
                     <span className="text-muted">|</span>
                     <span className="text-primary">
-                      Prix: <strong>{formatPrice(contract.price_buy)}/kg</strong>
+                      Prix: <strong>{formatPriceWithUnit(contract.price_buy, contract.price_unit)}</strong>
                     </span>
                     {contract.qty_in_transit_kg > 0 && (
                       <>

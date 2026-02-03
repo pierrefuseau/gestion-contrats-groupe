@@ -12,6 +12,7 @@ export interface SupplierContract {
   supplier_sku: string;
   article_name: string;
   price_buy: number;
+  price_unit: string;
   date_start: string;
   date_end: string;
   qty_contracted_uvc: number;
