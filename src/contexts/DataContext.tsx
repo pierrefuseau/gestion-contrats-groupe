@@ -1,9 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
-import { initializeData, syncFromGoogleSheets } from '../services/syncService';
+import { loadStaticData, getLoadedData, clearCache } from '../data/staticDataLoader';
 import { buildSearchIndexesFromData } from '../services/searchEngine';
-import { calculateAllPositions, getPartners } from '../utils/calculations';
-import { buildContractIndexes, buildArticleIndex, buildPositionIndex, buildPartnerIndex } from '../services/dataIndex';
 
 interface DataContextType {
   articles: Article[];
@@ -24,6 +22,8 @@ interface DataContextType {
   getClientContractsBySku: (sku: string) => ClientContract[];
   getPartnerByCode: (code: string) => Partner | undefined;
   getPositionBySku: (sku: string) => PositionSummary | undefined;
+  getSupplierContractsByCode: (code: string) => SupplierContract[];
+  getClientContractsByCode: (code: string) => ClientContract[];
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -32,18 +32,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [supplierContracts, setSupplierContracts] = useState<SupplierContract[]>([]);
   const [clientContracts, setClientContracts] = useState<ClientContract[]>([]);
+  const [suppliers, setSuppliers] = useState<Partner[]>([]);
+  const [clients, setClients] = useState<Partner[]>([]);
+  const [positions, setPositions] = useState<PositionSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-  const updateData = useCallback((data: { articles: Article[]; supplierContracts: SupplierContract[]; clientContracts: ClientContract[] }) => {
-    setArticles(data.articles);
-    setSupplierContracts(data.supplierContracts);
-    setClientContracts(data.clientContracts);
-    buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
-    setLastUpdated(new Date());
-  }, []);
 
   const loadData = useCallback(async (force: boolean = false) => {
     try {
@@ -51,47 +46,39 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       if (force) {
-        const result = await syncFromGoogleSheets();
-        if (!result.success) {
-          throw new Error(result.message);
-        }
+        clearCache();
       }
 
-      const data = await initializeData(
-        undefined,
-        (freshData) => {
-          updateData(freshData);
-        }
-      );
+      const data = await loadStaticData();
 
-      updateData(data);
+      setArticles(data.articles);
+      setSupplierContracts(data.supplierContracts);
+      setClientContracts(data.clientContracts);
+      setSuppliers(data.suppliers);
+      setClients(data.clients);
+      setPositions(data.positions);
+
+      buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
+
+      if (data.metadata?.generatedAt) {
+        setLastUpdated(new Date(data.metadata.generatedAt));
+      } else {
+        setLastUpdated(new Date());
+      }
+
       setIsReady(true);
     } catch (err) {
       const loadError = err instanceof Error ? err : new Error('Erreur inconnue');
       setError(loadError);
+      console.error('Erreur chargement:', loadError);
     } finally {
       setIsLoading(false);
     }
-  }, [updateData]);
+  }, []);
 
   useEffect(() => {
     loadData(false);
   }, [loadData]);
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const result = await syncFromGoogleSheets();
-        if (result.success && result.source === 'google_sheets') {
-          setLastUpdated(new Date());
-        }
-      } catch (err) {
-        console.error('Erreur sync background:', err);
-      }
-    }, 60 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const refresh = useCallback(async () => {
     await loadData(false);
@@ -101,35 +88,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await loadData(true);
   }, [loadData]);
 
-  const partners = useMemo(
-    () => getPartners(supplierContracts, clientContracts),
-    [supplierContracts, clientContracts]
-  );
-
-  const positions = useMemo(
-    () => calculateAllPositions(articles, supplierContracts, clientContracts),
-    [articles, supplierContracts, clientContracts]
-  );
-
-  const contractIndexes = useMemo(
-    () => buildContractIndexes(supplierContracts, clientContracts),
-    [supplierContracts, clientContracts]
-  );
-
-  const articleIndex = useMemo(
-    () => buildArticleIndex(articles),
-    [articles]
-  );
-
-  const positionIndex = useMemo(
-    () => buildPositionIndex(positions),
-    [positions]
-  );
-
-  const partnerIndex = useMemo(
-    () => buildPartnerIndex(partners),
-    [partners]
-  );
+  const partners = useMemo(() => [...suppliers, ...clients], [suppliers, clients]);
 
   const criticalPositions = useMemo(
     () => positions.filter(p => p.status === 'CRITICAL').sort((a, b) => a.net_position_kg - b.net_position_kg),
@@ -142,28 +101,59 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   const getArticleBySku = useCallback(
-    (sku: string) => articleIndex.get(sku.toLowerCase()),
-    [articleIndex]
+    (sku: string) => {
+      const data = getLoadedData();
+      return data?.indexes.articlesBySku.get(sku.toLowerCase());
+    },
+    []
   );
 
   const getSupplierContractsBySku = useCallback(
-    (sku: string) => contractIndexes.supplierContractsBySku.get(sku.toLowerCase()) || [],
-    [contractIndexes]
+    (sku: string) => {
+      const data = getLoadedData();
+      return data?.indexes.supplierContractsBySku.get(sku.toLowerCase()) || [];
+    },
+    []
   );
 
   const getClientContractsBySku = useCallback(
-    (sku: string) => contractIndexes.clientContractsBySku.get(sku.toLowerCase()) || [],
-    [contractIndexes]
+    (sku: string) => {
+      const data = getLoadedData();
+      return data?.indexes.clientContractsBySku.get(sku.toLowerCase()) || [];
+    },
+    []
   );
 
   const getPartnerByCode = useCallback(
-    (code: string) => partnerIndex.get(code),
-    [partnerIndex]
+    (code: string) => {
+      const data = getLoadedData();
+      return data?.indexes.partnersByCode.get(code);
+    },
+    []
   );
 
   const getPositionBySku = useCallback(
-    (sku: string) => positionIndex.get(sku.toLowerCase()),
-    [positionIndex]
+    (sku: string) => {
+      const data = getLoadedData();
+      return data?.indexes.positionsBySku.get(sku.toLowerCase());
+    },
+    []
+  );
+
+  const getSupplierContractsByCode = useCallback(
+    (code: string) => {
+      const data = getLoadedData();
+      return data?.indexes.supplierContractsByCode.get(code) || [];
+    },
+    []
+  );
+
+  const getClientContractsByCode = useCallback(
+    (code: string) => {
+      const data = getLoadedData();
+      return data?.indexes.clientContractsByCode.get(code) || [];
+    },
+    []
   );
 
   return (
@@ -185,7 +175,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       getSupplierContractsBySku,
       getClientContractsBySku,
       getPartnerByCode,
-      getPositionBySku
+      getPositionBySku,
+      getSupplierContractsByCode,
+      getClientContractsByCode
     }}>
       {children}
     </DataContext.Provider>
