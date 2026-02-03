@@ -1,4 +1,12 @@
-import { db, markSyncComplete, needsSync, hasLocalData } from '../db/database';
+import {
+  getAllData,
+  markSyncComplete,
+  needsSync,
+  hasData,
+  upsertArticles,
+  upsertSupplierContracts,
+  upsertClientContracts
+} from './supabaseDataService';
 import { fetchAllData as fetchFromGoogleSheets } from './googleSheetsApi';
 import type { Article, SupplierContract, ClientContract } from '../types';
 
@@ -19,25 +27,13 @@ export async function syncFromGoogleSheets(force: boolean = false): Promise<Sync
       };
     }
 
-    console.log('Synchronisation Google Sheets -> IndexedDB...');
+    console.log('Synchronisation Google Sheets -> Supabase...');
 
     const { articles, supplierContracts, clientContracts } = await fetchFromGoogleSheets();
 
-    await db.transaction('rw', [db.articles, db.supplierContracts, db.clientContracts], async () => {
-      await db.articles.clear();
-      await db.supplierContracts.clear();
-      await db.clientContracts.clear();
-
-      if (articles.length > 0) {
-        await db.articles.bulkAdd(articles);
-      }
-      if (supplierContracts.length > 0) {
-        await db.supplierContracts.bulkAdd(supplierContracts);
-      }
-      if (clientContracts.length > 0) {
-        await db.clientContracts.bulkAdd(clientContracts);
-      }
-    });
+    await upsertArticles(articles);
+    await upsertSupplierContracts(supplierContracts);
+    await upsertClientContracts(clientContracts);
 
     const counts = {
       articles: articles.length,
@@ -64,18 +60,12 @@ export async function syncFromGoogleSheets(force: boolean = false): Promise<Sync
   }
 }
 
-export async function loadAllDataFromIndexedDB(): Promise<{
+export async function loadAllData(): Promise<{
   articles: Article[];
   supplierContracts: SupplierContract[];
   clientContracts: ClientContract[];
 }> {
-  const [articles, supplierContracts, clientContracts] = await Promise.all([
-    db.articles.toArray(),
-    db.supplierContracts.toArray(),
-    db.clientContracts.toArray()
-  ]);
-
-  return { articles, supplierContracts, clientContracts };
+  return getAllData();
 }
 
 export async function initializeData(onProgress?: (message: string) => void): Promise<{
@@ -83,11 +73,11 @@ export async function initializeData(onProgress?: (message: string) => void): Pr
   supplierContracts: SupplierContract[];
   clientContracts: ClientContract[];
 }> {
-  const hasData = await hasLocalData();
+  const dataExists = await hasData();
 
-  if (hasData) {
-    onProgress?.('Chargement depuis le cache local...');
-    const data = await loadAllDataFromIndexedDB();
+  if (dataExists) {
+    onProgress?.('Chargement depuis Supabase...');
+    const data = await getAllData();
 
     needsSync(60).then(async (needsUpdate) => {
       if (needsUpdate) {
@@ -106,5 +96,5 @@ export async function initializeData(onProgress?: (message: string) => void): Pr
     throw new Error(result.message);
   }
 
-  return loadAllDataFromIndexedDB();
+  return getAllData();
 }

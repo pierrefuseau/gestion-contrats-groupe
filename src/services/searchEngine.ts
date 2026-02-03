@@ -1,5 +1,5 @@
 import Fuse, { type IFuseOptions } from 'fuse.js';
-import { db } from '../db/database';
+import { getAllData } from './supabaseDataService';
 import type { Article, SupplierContract, ClientContract } from '../types';
 
 export interface SearchResult {
@@ -48,11 +48,7 @@ export async function refreshSearchIndexes(): Promise<void> {
   console.log('Construction des index de recherche...');
   const startTime = performance.now();
 
-  const [articles, supplierContracts, clientContracts] = await Promise.all([
-    db.articles.toArray(),
-    db.supplierContracts.toArray(),
-    db.clientContracts.toArray()
-  ]);
+  const { articles, supplierContracts, clientContracts } = await getAllData();
 
   uniqueSuppliers.clear();
   supplierContracts.forEach(c => {

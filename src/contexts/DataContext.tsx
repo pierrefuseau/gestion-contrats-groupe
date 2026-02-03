@@ -1,10 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
-import { initializeData, syncFromGoogleSheets, loadAllDataFromIndexedDB } from '../services/syncService';
+import { initializeData, syncFromGoogleSheets, loadAllData } from '../services/syncService';
 import { buildSearchIndexesFromData } from '../services/searchEngine';
 import { calculateAllPositions, getPartners } from '../utils/calculations';
 import { buildContractIndexes, buildArticleIndex, buildPositionIndex, buildPartnerIndex } from '../services/dataIndex';
-import { getLastSyncTime } from '../db/database';
+import { getLastSyncTime } from '../services/supabaseDataService';
 
 interface DataContextType {
   articles: Article[];
@@ -48,7 +48,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (!result.success) {
           throw new Error(result.message);
         }
-        const data = await loadAllDataFromIndexedDB();
+        const data = await loadAllData();
         setArticles(data.articles);
         setSupplierContracts(data.supplierContracts);
         setClientContracts(data.clientContracts);
@@ -81,7 +81,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         const result = await syncFromGoogleSheets();
         if (result.success && result.source === 'google_sheets') {
-          const data = await loadAllDataFromIndexedDB();
+          const data = await loadAllData();
           setArticles(data.articles);
           setSupplierContracts(data.supplierContracts);
           setClientContracts(data.clientContracts);
