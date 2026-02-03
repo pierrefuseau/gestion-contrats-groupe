@@ -61,7 +61,7 @@ export async function fetchArticles(): Promise<Article[]> {
 }
 
 export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
-  const rows = await fetchSheetData('contrats-fournisseurs');
+  const rows = await fetchSheetData('contrats_fournisseurs');
 
   return rows.slice(1).map(row => {
     const qty_contracted_uvc = parseNumber(row[8]);
@@ -104,7 +104,7 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
 }
 
 export async function fetchClientContracts(): Promise<ClientContract[]> {
-  const rows = await fetchSheetData('contrats-clients');
+  const rows = await fetchSheetData('contrats_clients');
 
   return rows.slice(1).map(row => {
     const qty_contracted_uvc = parseNumber(row[8]);
