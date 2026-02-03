@@ -49,19 +49,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   const getArticleBySku = (sku: string) =>
-    sheetData.articles.find(a => a.sku === sku);
+    sheetData.articles.find(a => a.sku.toLowerCase() === sku.toLowerCase());
 
   const getSupplierContractsBySku = (sku: string) =>
-    sheetData.supplierContracts.filter(c => c.sku === sku);
+    sheetData.supplierContracts.filter(c => c.sku.toLowerCase() === sku.toLowerCase());
 
   const getClientContractsBySku = (sku: string) =>
-    sheetData.clientContracts.filter(c => c.sku === sku);
+    sheetData.clientContracts.filter(c => c.sku.toLowerCase() === sku.toLowerCase());
 
   const getPartnerByCode = (code: string) =>
     partners.find(p => p.code === code);
 
   const getPositionBySku = (sku: string) =>
-    positions.find(p => p.sku === sku);
+    positions.find(p => p.sku.toLowerCase() === sku.toLowerCase());
 
   return (
     <DataContext.Provider value={{

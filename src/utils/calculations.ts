@@ -72,8 +72,9 @@ export function calculateAllPositions(
   clientContracts: ClientContract[]
 ): PositionSummary[] {
   return articles.map(article => {
-    const supplierForArticle = supplierContracts.filter(c => c.sku === article.sku);
-    const clientForArticle = clientContracts.filter(c => c.sku === article.sku);
+    const skuLower = article.sku.toLowerCase();
+    const supplierForArticle = supplierContracts.filter(c => c.sku.toLowerCase() === skuLower);
+    const clientForArticle = clientContracts.filter(c => c.sku.toLowerCase() === skuLower);
     return calculatePosition(article, supplierForArticle, clientForArticle);
   });
 }

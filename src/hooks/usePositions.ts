@@ -49,11 +49,12 @@ export function usePositionBySku(
   clientContracts: ClientContract[]
 ): PositionSummary | null {
   return useMemo(() => {
-    const article = articles.find(a => a.sku === sku);
+    const skuLower = sku.toLowerCase();
+    const article = articles.find(a => a.sku.toLowerCase() === skuLower);
     if (!article) return null;
 
-    const articleSupplierContracts = supplierContracts.filter(c => c.sku === sku);
-    const articleClientContracts = clientContracts.filter(c => c.sku === sku);
+    const articleSupplierContracts = supplierContracts.filter(c => c.sku.toLowerCase() === skuLower);
+    const articleClientContracts = clientContracts.filter(c => c.sku.toLowerCase() === skuLower);
 
     return calculatePosition(article, articleSupplierContracts, articleClientContracts);
   }, [sku, articles, supplierContracts, clientContracts]);
