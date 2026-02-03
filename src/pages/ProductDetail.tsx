@@ -87,7 +87,7 @@ export function ProductDetail() {
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2">
               <Truck className="w-5 h-5 text-emerald-600" />
-              Contrats Fournisseurs ({supplierContracts.length})
+              Contrats Fournisseurs ({supplierContracts.filter(c => c.qty_remaining_kg > 0 || c.qty_remaining_uvc > 0).length})
             </h3>
             <Button
               variant="secondary"
@@ -99,7 +99,7 @@ export function ProductDetail() {
             </Button>
           </div>
           <div className="p-4">
-            <SupplierContractsTable contracts={supplierContracts.filter(c => c.status === 'active')} />
+            <SupplierContractsTable contracts={supplierContracts.filter(c => c.qty_remaining_kg > 0 || c.qty_remaining_uvc > 0)} />
           </div>
         </Card>
 
@@ -107,7 +107,7 @@ export function ProductDetail() {
           <div className="flex items-center justify-between p-4 border-b border-slate-100">
             <h3 className="font-semibold text-slate-900 flex items-center gap-2">
               <Package className="w-5 h-5 text-rose-600" />
-              Contrats Clients ({clientContracts.length})
+              Contrats Clients ({clientContracts.filter(c => c.qty_remaining_kg > 0 || c.qty_remaining_uvc > 0).length})
             </h3>
             <Button
               variant="secondary"
@@ -119,7 +119,7 @@ export function ProductDetail() {
             </Button>
           </div>
           <div className="p-4">
-            <ClientContractsTable contracts={clientContracts.filter(c => c.status === 'active')} />
+            <ClientContractsTable contracts={clientContracts.filter(c => c.qty_remaining_kg > 0 || c.qty_remaining_uvc > 0)} />
           </div>
         </Card>
       </div>

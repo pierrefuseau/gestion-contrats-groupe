@@ -34,15 +34,9 @@ function parseString(value: unknown): string {
   return String(value).trim();
 }
 
-function calculateStatus(dateEnd: string, qtyRemaining: number): 'active' | 'completed' {
-  if (qtyRemaining <= 0) return 'completed';
-  if (dateEnd) {
-    const endDate = new Date(dateEnd);
-    if (!isNaN(endDate.getTime()) && endDate < new Date()) {
-      return 'completed';
-    }
-  }
-  return 'active';
+function calculateStatus(qtyRemainingUvc: number, qtyRemainingKg: number): 'active' | 'completed' {
+  if (qtyRemainingUvc > 0 || qtyRemainingKg > 0) return 'active';
+  return 'completed';
 }
 
 async function fetchSheetData(sheetName: string): Promise<unknown[][]> {
@@ -95,7 +89,7 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
       const qty_remaining_kg = qty_remaining_uvc * conversionFactor;
       const qty_in_transit_kg = qty_in_transit_uvc * conversionFactor;
 
-      const status = calculateStatus(date_end, qty_remaining_uvc);
+      const status = calculateStatus(qty_remaining_uvc, qty_remaining_kg);
 
       return {
         supplier_code,
@@ -141,7 +135,7 @@ export async function fetchClientContracts(): Promise<ClientContract[]> {
       const qty_remaining_uvc = Math.max(0, qty_contracted_uvc - qty_purchased_uvc);
       const qty_remaining_kg = Math.max(0, qty_contracted_kg - qty_purchased_kg);
 
-      const status = calculateStatus(date_end, qty_remaining_uvc);
+      const status = calculateStatus(qty_remaining_uvc, qty_remaining_kg);
 
       return {
         contract_id,
