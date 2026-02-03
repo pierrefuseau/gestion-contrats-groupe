@@ -71,10 +71,33 @@ export function calculateAllPositions(
   supplierContracts: SupplierContract[],
   clientContracts: ClientContract[]
 ): PositionSummary[] {
+  const supplierIndex = new Map<string, SupplierContract[]>();
+  const clientIndex = new Map<string, ClientContract[]>();
+
+  for (const contract of supplierContracts) {
+    const key = contract.sku.toLowerCase();
+    const existing = supplierIndex.get(key);
+    if (existing) {
+      existing.push(contract);
+    } else {
+      supplierIndex.set(key, [contract]);
+    }
+  }
+
+  for (const contract of clientContracts) {
+    const key = contract.sku.toLowerCase();
+    const existing = clientIndex.get(key);
+    if (existing) {
+      existing.push(contract);
+    } else {
+      clientIndex.set(key, [contract]);
+    }
+  }
+
   return articles.map(article => {
     const skuLower = article.sku.toLowerCase();
-    const supplierForArticle = supplierContracts.filter(c => c.sku.toLowerCase() === skuLower);
-    const clientForArticle = clientContracts.filter(c => c.sku.toLowerCase() === skuLower);
+    const supplierForArticle = supplierIndex.get(skuLower) || [];
+    const clientForArticle = clientIndex.get(skuLower) || [];
     return calculatePosition(article, supplierForArticle, clientForArticle);
   });
 }

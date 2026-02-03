@@ -10,6 +10,11 @@ export interface SearchResult {
   link: string;
 }
 
+const FUSE_OPTIONS = {
+  threshold: 0.4,
+  includeScore: true
+};
+
 export function useSearch(
   articles: Article[],
   partners: Partner[],
@@ -20,6 +25,11 @@ export function useSearch(
   const [isOpen, setIsOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
+  const productFuseRef = useRef<Fuse<Article> | null>(null);
+  const partnerFuseRef = useRef<Fuse<Partner> | null>(null);
+  const contractFuseRef = useRef<Fuse<SupplierContract> | null>(null);
+  const lastDataLengthRef = useRef({ articles: 0, partners: 0, contracts: 0 });
+
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -27,7 +37,7 @@ export function useSearch(
 
     debounceRef.current = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 100);
+    }, 150);
 
     return () => {
       if (debounceRef.current) {
@@ -36,32 +46,59 @@ export function useSearch(
     };
   }, [query]);
 
-  const productFuse = useMemo(() => new Fuse(articles, {
-    keys: [
-      { name: 'name', weight: 1.0 },
-      { name: 'sku', weight: 0.8 }
-    ],
-    threshold: 0.4,
-    includeScore: true
-  }), [articles]);
+  const productFuse = useMemo(() => {
+    if (
+      productFuseRef.current &&
+      lastDataLengthRef.current.articles === articles.length
+    ) {
+      return productFuseRef.current;
+    }
+    lastDataLengthRef.current.articles = articles.length;
+    productFuseRef.current = new Fuse(articles, {
+      ...FUSE_OPTIONS,
+      keys: [
+        { name: 'name', weight: 1.0 },
+        { name: 'sku', weight: 0.8 }
+      ]
+    });
+    return productFuseRef.current;
+  }, [articles]);
 
-  const partnerFuse = useMemo(() => new Fuse(partners, {
-    keys: [
-      { name: 'name', weight: 1.0 },
-      { name: 'code', weight: 0.8 }
-    ],
-    threshold: 0.4,
-    includeScore: true
-  }), [partners]);
+  const partnerFuse = useMemo(() => {
+    if (
+      partnerFuseRef.current &&
+      lastDataLengthRef.current.partners === partners.length
+    ) {
+      return partnerFuseRef.current;
+    }
+    lastDataLengthRef.current.partners = partners.length;
+    partnerFuseRef.current = new Fuse(partners, {
+      ...FUSE_OPTIONS,
+      keys: [
+        { name: 'name', weight: 1.0 },
+        { name: 'code', weight: 0.8 }
+      ]
+    });
+    return partnerFuseRef.current;
+  }, [partners]);
 
-  const contractFuse = useMemo(() => new Fuse(supplierContracts, {
-    keys: [
-      { name: 'supplier_sku', weight: 0.6 },
-      { name: 'supplier_name', weight: 0.8 }
-    ],
-    threshold: 0.4,
-    includeScore: true
-  }), [supplierContracts]);
+  const contractFuse = useMemo(() => {
+    if (
+      contractFuseRef.current &&
+      lastDataLengthRef.current.contracts === supplierContracts.length
+    ) {
+      return contractFuseRef.current;
+    }
+    lastDataLengthRef.current.contracts = supplierContracts.length;
+    contractFuseRef.current = new Fuse(supplierContracts, {
+      ...FUSE_OPTIONS,
+      keys: [
+        { name: 'supplier_sku', weight: 0.6 },
+        { name: 'supplier_name', weight: 0.8 }
+      ]
+    });
+    return contractFuseRef.current;
+  }, [supplierContracts]);
 
   const results = useMemo((): SearchResult[] => {
     if (debouncedQuery.length < 2) return [];

@@ -1,7 +1,7 @@
 import type { Article, SupplierContract, ClientContract } from '../types';
 
 const CACHE_KEY = 'agritrade_data_cache';
-const CACHE_DURATION = 5 * 60 * 1000;
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 interface CacheData {
   timestamp: number;

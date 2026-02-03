@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Article, SupplierContract, ClientContract } from '../types';
-import { fetchAllData } from '../services/googleSheetsApi';
+import { fetchAllData } from '../services/dataService';
 import { getFromCache, saveToCache, clearCache } from '../services/dataCache';
 
 interface SheetDataState {
@@ -27,11 +27,16 @@ export function useSheetData(): SheetData {
     lastUpdated: null
   });
 
-  const loadFromApi = useCallback(async (skipCache: boolean = false) => {
+  const loadingRef = useRef(false);
+
+  const loadFromApi = useCallback(async (forceRefresh: boolean = false) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      if (!skipCache) {
+      if (!forceRefresh) {
         const cached = getFromCache();
         if (cached) {
           setState({
@@ -42,13 +47,18 @@ export function useSheetData(): SheetData {
             error: null,
             lastUpdated: new Date(cached.timestamp)
           });
+          loadingRef.current = false;
           return;
         }
       }
 
-      const data = await fetchAllData();
+      const data = await fetchAllData(forceRefresh);
 
-      saveToCache(data);
+      saveToCache({
+        articles: data.articles,
+        supplierContracts: data.supplierContracts,
+        clientContracts: data.clientContracts
+      });
 
       setState({
         articles: data.articles,
@@ -65,6 +75,8 @@ export function useSheetData(): SheetData {
         isLoading: false,
         error
       }));
+    } finally {
+      loadingRef.current = false;
     }
   }, []);
 

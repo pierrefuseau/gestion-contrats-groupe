@@ -1,7 +1,8 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useCallback, type ReactNode } from 'react';
 import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
 import { useSheetData } from '../hooks/useSheetData';
 import { calculateAllPositions, getPartners } from '../utils/calculations';
+import { buildContractIndexes, buildArticleIndex, buildPositionIndex, buildPartnerIndex } from '../services/dataIndex';
 
 interface DataContextType {
   articles: Article[];
@@ -38,6 +39,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [sheetData.articles, sheetData.supplierContracts, sheetData.clientContracts]
   );
 
+  const contractIndexes = useMemo(
+    () => buildContractIndexes(sheetData.supplierContracts, sheetData.clientContracts),
+    [sheetData.supplierContracts, sheetData.clientContracts]
+  );
+
+  const articleIndex = useMemo(
+    () => buildArticleIndex(sheetData.articles),
+    [sheetData.articles]
+  );
+
+  const positionIndex = useMemo(
+    () => buildPositionIndex(positions),
+    [positions]
+  );
+
+  const partnerIndex = useMemo(
+    () => buildPartnerIndex(partners),
+    [partners]
+  );
+
   const criticalPositions = useMemo(
     () => positions.filter(p => p.status === 'CRITICAL').sort((a, b) => a.net_position_kg - b.net_position_kg),
     [positions]
@@ -48,20 +69,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [positions]
   );
 
-  const getArticleBySku = (sku: string) =>
-    sheetData.articles.find(a => a.sku.toLowerCase() === sku.toLowerCase());
+  const getArticleBySku = useCallback(
+    (sku: string) => articleIndex.get(sku.toLowerCase()),
+    [articleIndex]
+  );
 
-  const getSupplierContractsBySku = (sku: string) =>
-    sheetData.supplierContracts.filter(c => c.sku.toLowerCase() === sku.toLowerCase());
+  const getSupplierContractsBySku = useCallback(
+    (sku: string) => contractIndexes.supplierContractsBySku.get(sku.toLowerCase()) || [],
+    [contractIndexes]
+  );
 
-  const getClientContractsBySku = (sku: string) =>
-    sheetData.clientContracts.filter(c => c.sku.toLowerCase() === sku.toLowerCase());
+  const getClientContractsBySku = useCallback(
+    (sku: string) => contractIndexes.clientContractsBySku.get(sku.toLowerCase()) || [],
+    [contractIndexes]
+  );
 
-  const getPartnerByCode = (code: string) =>
-    partners.find(p => p.code === code);
+  const getPartnerByCode = useCallback(
+    (code: string) => partnerIndex.get(code),
+    [partnerIndex]
+  );
 
-  const getPositionBySku = (sku: string) =>
-    positions.find(p => p.sku.toLowerCase() === sku.toLowerCase());
+  const getPositionBySku = useCallback(
+    (sku: string) => positionIndex.get(sku.toLowerCase()),
+    [positionIndex]
+  );
 
   return (
     <DataContext.Provider value={{
