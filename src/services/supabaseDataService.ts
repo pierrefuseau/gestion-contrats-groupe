@@ -173,6 +173,8 @@ async function batchOperation<T>(
 export async function upsertArticles(articles: Article[]): Promise<void> {
   if (articles.length === 0) return;
 
+  await supabase.from('articles').delete().neq('sku', '');
+
   await batchOperation(articles, async (batch, batchIndex) => {
     const mappedBatch = batch.map(a => ({
       sku: a.sku,
@@ -184,7 +186,7 @@ export async function upsertArticles(articles: Article[]): Promise<void> {
 
     const { error } = await supabase
       .from('articles')
-      .upsert(mappedBatch, { onConflict: 'sku' });
+      .insert(mappedBatch);
 
     if (error) {
       console.error(`Articles batch ${batchIndex} failed:`, error.message, mappedBatch[0]);

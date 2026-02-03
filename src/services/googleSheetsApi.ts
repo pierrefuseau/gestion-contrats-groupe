@@ -43,6 +43,22 @@ function calculateStatus(qtyRemainingUvc: number, qtyRemainingKg: number): 'acti
   return 'completed';
 }
 
+function deduplicateArticles(articles: Article[]): Article[] {
+  const articleMap = new Map<string, Article>();
+
+  for (const article of articles) {
+    const existing = articleMap.get(article.sku);
+    if (existing) {
+      existing.stock_uvc += article.stock_uvc;
+      existing.stock_kg += article.stock_kg;
+    } else {
+      articleMap.set(article.sku, { ...article });
+    }
+  }
+
+  return Array.from(articleMap.values());
+}
+
 async function fetchSheetData(sheetName: string): Promise<unknown[][]> {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`;
 
@@ -59,7 +75,7 @@ async function fetchSheetData(sheetName: string): Promise<unknown[][]> {
 export async function fetchArticles(): Promise<Article[]> {
   const rows = await fetchSheetData('articles');
 
-  return rows.slice(1)
+  const rawArticles = rows.slice(1)
     .map(row => ({
       sku: parseString(row[0]),
       name: parseString(row[1]),
@@ -67,6 +83,8 @@ export async function fetchArticles(): Promise<Article[]> {
       stock_kg: parseNumber(row[3])
     }))
     .filter(a => a.sku !== '');
+
+  return deduplicateArticles(rawArticles);
 }
 
 export async function fetchSupplierContracts(): Promise<SupplierContract[]> {

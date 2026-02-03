@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
-import { initializeData, syncFromGoogleSheets, loadAllData } from '../services/syncService';
+import { initializeData, syncFromGoogleSheets, onSyncError } from '../services/syncService';
 import { buildSearchIndexesFromData } from '../services/searchEngine';
 import { calculateAllPositions, getPartners } from '../utils/calculations';
 import { buildContractIndexes, buildArticleIndex, buildPositionIndex, buildPartnerIndex } from '../services/dataIndex';
-import { getLastSyncTime } from '../services/supabaseDataService';
 
 interface DataContextType {
   articles: Article[];
@@ -17,9 +16,11 @@ interface DataContextType {
   isLoading: boolean;
   isReady: boolean;
   error: Error | null;
+  syncError: string | null;
   lastUpdated: Date | null;
   refresh: () => Promise<void>;
   forceRefresh: () => Promise<void>;
+  dismissSyncError: () => void;
   getArticleBySku: (sku: string) => Article | undefined;
   getSupplierContractsBySku: (sku: string) => SupplierContract[];
   getClientContractsBySku: (sku: string) => ClientContract[];
@@ -36,7 +37,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  const updateData = useCallback((data: { articles: Article[]; supplierContracts: SupplierContract[]; clientContracts: ClientContract[] }) => {
+    setArticles(data.articles);
+    setSupplierContracts(data.supplierContracts);
+    setClientContracts(data.clientContracts);
+    buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
+    setLastUpdated(new Date());
+  }, []);
 
   const loadData = useCallback(async (force: boolean = false) => {
     try {
@@ -44,25 +54,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       if (force) {
-        const result = await syncFromGoogleSheets(true);
+        const result = await syncFromGoogleSheets();
         if (!result.success) {
           throw new Error(result.message);
         }
-        const data = await loadAllData();
-        setArticles(data.articles);
-        setSupplierContracts(data.supplierContracts);
-        setClientContracts(data.clientContracts);
-        buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
-      } else {
-        const data = await initializeData();
-        setArticles(data.articles);
-        setSupplierContracts(data.supplierContracts);
-        setClientContracts(data.clientContracts);
-        buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
       }
 
-      const syncTime = await getLastSyncTime();
-      setLastUpdated(syncTime);
+      const data = await initializeData(
+        undefined,
+        (freshData) => {
+          updateData(freshData);
+        }
+      );
+
+      updateData(data);
       setIsReady(true);
     } catch (err) {
       const loadError = err instanceof Error ? err : new Error('Erreur inconnue');
@@ -70,9 +75,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [updateData]);
 
   useEffect(() => {
+    onSyncError((errorMessage) => {
+      setSyncError(errorMessage);
+    });
     loadData(false);
   }, [loadData]);
 
@@ -81,13 +89,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         const result = await syncFromGoogleSheets();
         if (result.success && result.source === 'google_sheets') {
-          const data = await loadAllData();
-          setArticles(data.articles);
-          setSupplierContracts(data.supplierContracts);
-          setClientContracts(data.clientContracts);
-          buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
-          const syncTime = await getLastSyncTime();
-          setLastUpdated(syncTime);
+          setLastUpdated(new Date());
         }
       } catch (err) {
         console.error('Erreur sync background:', err);
@@ -104,6 +106,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const forceRefresh = useCallback(async () => {
     await loadData(true);
   }, [loadData]);
+
+  const dismissSyncError = useCallback(() => {
+    setSyncError(null);
+  }, []);
 
   const partners = useMemo(
     () => getPartners(supplierContracts, clientContracts),
@@ -182,9 +188,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       isLoading,
       isReady,
       error,
+      syncError,
       lastUpdated,
       refresh,
       forceRefresh,
+      dismissSyncError,
       getArticleBySku,
       getSupplierContractsBySku,
       getClientContractsBySku,
