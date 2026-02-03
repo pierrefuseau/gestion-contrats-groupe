@@ -9,6 +9,8 @@ interface DataContextType {
   clientContracts: ClientContract[];
   partners: Partner[];
   positions: PositionSummary[];
+  criticalPositions: PositionSummary[];
+  shortPositions: PositionSummary[];
   isLoading: boolean;
   error: Error | null;
   lastUpdated: Date | null;
@@ -36,6 +38,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [sheetData.articles, sheetData.supplierContracts, sheetData.clientContracts]
   );
 
+  const criticalPositions = useMemo(
+    () => positions.filter(p => p.status === 'CRITICAL').sort((a, b) => a.net_position_kg - b.net_position_kg),
+    [positions]
+  );
+
+  const shortPositions = useMemo(
+    () => positions.filter(p => p.status === 'SHORT' || p.status === 'CRITICAL').sort((a, b) => a.net_position_kg - b.net_position_kg),
+    [positions]
+  );
+
   const getArticleBySku = (sku: string) =>
     sheetData.articles.find(a => a.sku === sku);
 
@@ -56,6 +68,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ...sheetData,
       partners,
       positions,
+      criticalPositions,
+      shortPositions,
       getArticleBySku,
       getSupplierContractsBySku,
       getClientContractsBySku,
