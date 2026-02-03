@@ -29,26 +29,39 @@ function parseFrenchDate(dateStr: string): string {
 }
 
 function parseNumber(value: any): number {
-  if (typeof value === 'number') return value;
-  if (!value) return 0;
+  if (typeof value === 'number') return isNaN(value) ? 0 : value;
+  if (value === null || value === undefined || value === '') return 0;
 
-  const cleaned = String(value).replace(/\s/g, '').replace(',', '.');
-  return parseFloat(cleaned) || 0;
+  const str = String(value).trim();
+  if (!str) return 0;
+
+  const cleaned = str
+    .replace(/\s/g, '')
+    .replace(/,/g, '.')
+    .replace(/[^\d.\-]/g, '');
+
+  const result = parseFloat(cleaned);
+  return isNaN(result) ? 0 : result;
+}
+
+function parseSku(value: any): string {
+  if (!value) return '';
+  return String(value).trim().replace(/\s+/g, '');
 }
 
 export async function fetchArticles(): Promise<Article[]> {
   const rows = await fetchSheetData('articles');
 
   return rows.slice(1).map(row => ({
-    sku: String(row[0] || ''),
-    name: String(row[1] || ''),
+    sku: parseSku(row[0]),
+    name: String(row[1] || '').trim(),
     stock_uvc: parseNumber(row[2]),
     stock_kg: parseNumber(row[3])
   })).filter(a => a.sku);
 }
 
 export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
-  const rows = await fetchSheetData('contrats_fournisseurs');
+  const rows = await fetchSheetData('contrats-fournisseurs');
 
   return rows.slice(1).map(row => {
     const qty_contracted_uvc = parseNumber(row[8]);
@@ -66,12 +79,14 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
     const isFullyDelivered = qty_remaining_uvc <= 0;
     const status = (isExpired || isFullyDelivered) ? 'completed' : 'active';
 
+    const safeUvcToKg = isNaN(uvc_to_kg) ? 0 : uvc_to_kg;
+
     return {
-      supplier_code: String(row[0] || ''),
-      supplier_name: String(row[1] || ''),
-      sku: String(row[2] || ''),
-      supplier_sku: String(row[3] || ''),
-      article_name: String(row[4] || ''),
+      supplier_code: String(row[0] || '').trim(),
+      supplier_name: String(row[1] || '').trim() || 'Fournisseur Inconnu',
+      sku: parseSku(row[2]),
+      supplier_sku: String(row[3] || '').trim(),
+      article_name: String(row[4] || '').trim(),
       price_buy: parseNumber(row[5]),
       date_start: parseFrenchDate(String(row[6] || '')),
       date_end: parseFrenchDate(String(row[7] || '')),
@@ -81,15 +96,15 @@ export async function fetchSupplierContracts(): Promise<SupplierContract[]> {
       qty_received_uvc,
       qty_in_transit_uvc,
       qty_remaining_uvc,
-      qty_remaining_kg: qty_remaining_uvc * uvc_to_kg,
-      qty_in_transit_kg: qty_in_transit_uvc * uvc_to_kg,
+      qty_remaining_kg: qty_remaining_uvc * safeUvcToKg,
+      qty_in_transit_kg: qty_in_transit_uvc * safeUvcToKg,
       status
     };
   }).filter(c => c.sku) as SupplierContract[];
 }
 
 export async function fetchClientContracts(): Promise<ClientContract[]> {
-  const rows = await fetchSheetData('contrats_clients');
+  const rows = await fetchSheetData('contrats-clients');
 
   return rows.slice(1).map(row => {
     const qty_contracted_uvc = parseNumber(row[8]);
@@ -105,12 +120,15 @@ export async function fetchClientContracts(): Promise<ClientContract[]> {
     const isFullyDelivered = qty_remaining_uvc <= 0;
     const status = (isExpired || isFullyDelivered) ? 'completed' : 'active';
 
+    let safeQtyRemainingKg = qty_remaining_kg;
+    if (isNaN(safeQtyRemainingKg)) safeQtyRemainingKg = 0;
+
     return {
-      contract_id: String(row[0] || ''),
-      client_code: String(row[1] || ''),
-      client_name: String(row[2] || ''),
-      sku: String(row[3] || ''),
-      article_name: String(row[4] || ''),
+      contract_id: String(row[0] || '').trim(),
+      client_code: String(row[1] || '').trim(),
+      client_name: String(row[2] || '').trim() || 'Client Inconnu',
+      sku: parseSku(row[3]),
+      article_name: String(row[4] || '').trim(),
       date_start: parseFrenchDate(String(row[5] || '')),
       date_end: parseFrenchDate(String(row[6] || '')),
       price_sell: parseNumber(row[7]),
@@ -119,7 +137,7 @@ export async function fetchClientContracts(): Promise<ClientContract[]> {
       qty_purchased_uvc,
       qty_purchased_kg,
       qty_remaining_uvc,
-      qty_remaining_kg,
+      qty_remaining_kg: safeQtyRemainingKg,
       status
     };
   }).filter(c => c.sku) as ClientContract[];
