@@ -245,6 +245,9 @@ export function GlobalSearch() {
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-primary truncate">
                       {result.primaryText}
+                      <span className="ml-2 text-sm font-normal text-muted font-mono">
+                        ({result.code})
+                      </span>
                     </div>
                     <div className="text-sm text-muted truncate">
                       {result.secondaryText}
