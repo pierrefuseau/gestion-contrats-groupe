@@ -25,6 +25,48 @@ export function SupplierDetail() {
   const completedContracts = contracts.filter(c => c.status === 'completed');
   const supplierName = contracts[0]?.supplier_name || 'Fournisseur';
 
+  const groupedProducts = useMemo(() => {
+    const groups = new Map<string, {
+      sku: string;
+      article_name: string;
+      contractsCount: number;
+      qty_remaining_kg: number;
+      qty_in_transit_kg: number;
+      avg_price: number;
+      price_unit: string;
+    }>();
+
+    for (const contract of activeContracts) {
+      const existing = groups.get(contract.sku);
+      if (existing) {
+        const totalQty = existing.qty_remaining_kg + contract.qty_remaining_kg;
+        const weightedPrice = totalQty > 0
+          ? (existing.avg_price * existing.qty_remaining_kg + contract.price_buy * contract.qty_remaining_kg) / totalQty
+          : 0;
+
+        groups.set(contract.sku, {
+          ...existing,
+          contractsCount: existing.contractsCount + 1,
+          qty_remaining_kg: totalQty,
+          qty_in_transit_kg: existing.qty_in_transit_kg + contract.qty_in_transit_kg,
+          avg_price: weightedPrice,
+        });
+      } else {
+        groups.set(contract.sku, {
+          sku: contract.sku,
+          article_name: contract.article_name,
+          contractsCount: 1,
+          qty_remaining_kg: contract.qty_remaining_kg,
+          qty_in_transit_kg: contract.qty_in_transit_kg,
+          avg_price: contract.price_buy,
+          price_unit: contract.price_unit,
+        });
+      }
+    }
+
+    return Array.from(groups.values()).sort((a, b) => b.qty_remaining_kg - a.qty_remaining_kg);
+  }, [activeContracts]);
+
   const stats = useMemo(() => ({
     contractsCount: activeContracts.length,
     totalKg: activeContracts.reduce((sum, c) => sum + c.qty_remaining_kg, 0),
@@ -99,34 +141,39 @@ export function SupplierDetail() {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-primary mb-4">Contrats actifs</h2>
+          <h2 className="text-lg font-semibold text-primary mb-4">Produits sous contrat</h2>
           <div className="space-y-3">
-            {activeContracts.map((contract, idx) => (
+            {groupedProducts.map((product) => (
               <button
-                key={idx}
-                onClick={() => navigate(`/produits/${contract.sku}`)}
+                key={product.sku}
+                onClick={() => navigate(`/produits/${product.sku}`)}
                 className="w-full bg-white rounded-xl border border-border p-4 text-left
                           hover:border-accent hover:shadow-md transition-all group"
               >
-                <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">
-                  {contract.article_name}
-                </h3>
-                <p className="text-sm text-muted mt-1">
-                  SKU: {contract.sku} | {formatDate(contract.date_start)} - {formatDate(contract.date_end)}
-                </p>
+                <div className="flex items-start justify-between">
+                  <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">
+                    {product.article_name}
+                  </h3>
+                  {product.contractsCount > 1 && (
+                    <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">
+                      {product.contractsCount} contrats
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted mt-1">SKU: {product.sku}</p>
                 <div className="flex items-center gap-4 mt-2 text-sm">
                   <span className="text-primary">
-                    Reste: <strong>{formatWeight(contract.qty_remaining_kg)}</strong>
+                    Reste: <strong>{formatWeight(product.qty_remaining_kg)}</strong>
                   </span>
                   <span className="text-muted">|</span>
                   <span className="text-primary">
-                    Prix: <strong>{formatPriceWithUnit(contract.price_buy, contract.price_unit)}</strong>
+                    Prix {product.contractsCount > 1 ? 'moy.' : ''}: <strong>{formatPriceWithUnit(product.avg_price, product.price_unit)}</strong>
                   </span>
-                  {contract.qty_in_transit_kg > 0 && (
+                  {product.qty_in_transit_kg > 0 && (
                     <>
                       <span className="text-muted">|</span>
                       <span className="text-warning">
-                        En transit: {formatWeight(contract.qty_in_transit_kg)}
+                        En transit: {formatWeight(product.qty_in_transit_kg)}
                       </span>
                     </>
                   )}
@@ -134,7 +181,7 @@ export function SupplierDetail() {
               </button>
             ))}
 
-            {activeContracts.length === 0 && (
+            {groupedProducts.length === 0 && (
               <div className="text-center py-8 text-muted">
                 Aucun contrat actif
               </div>
