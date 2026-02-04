@@ -6,9 +6,8 @@ import { formatPriceWithUnit } from '../utils/formatters';
 export function ProductDetailNew() {
   const { sku } = useParams<{ sku: string }>();
   const navigate = useNavigate();
-  const { getArticleBySku, getSupplierContractsBySku, getClientContractsBySku, getPositionBySku } = useData();
+  const { getSupplierContractsBySku, getClientContractsBySku, getPositionBySku } = useData();
 
-  const article = sku ? getArticleBySku(sku) : undefined;
   const position = sku ? getPositionBySku(sku) : undefined;
   const supplierContracts = sku ? getSupplierContractsBySku(sku) : [];
   const clientContracts = sku ? getClientContractsBySku(sku) : [];
@@ -60,7 +59,7 @@ export function ProductDetailNew() {
     }
   };
 
-  if (!article || !position) {
+  if (!position) {
     return (
       <div className="min-h-screen bg-background">
         <header className="bg-white border-b border-border px-6 py-4">
@@ -110,7 +109,7 @@ export function ProductDetailNew() {
               <Package className="w-7 h-7 text-accent" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-primary">{article.name}</h1>
+              <h1 className="text-2xl font-bold text-primary">{position.article_name}</h1>
               <p className="text-muted">SKU: {sku}</p>
             </div>
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${getStatusColor(position.status)}`}>

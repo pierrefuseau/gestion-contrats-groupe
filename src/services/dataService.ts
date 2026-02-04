@@ -1,24 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
-
-export async function loadArticles(): Promise<Article[]> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('sku, name, stock_uvc, stock_kg')
-    .limit(15000);
-
-  if (error) {
-    console.error('Erreur chargement articles:', error);
-    return [];
-  }
-
-  return (data || []).map(row => ({
-    sku: row.sku,
-    name: row.name || '',
-    stock_uvc: Number(row.stock_uvc) || 0,
-    stock_kg: Number(row.stock_kg) || 0
-  }));
-}
+import type { SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
 
 export async function loadSupplierContracts(): Promise<SupplierContract[]> {
   const { data, error } = await supabase
@@ -158,15 +139,13 @@ export async function loadPositions(): Promise<PositionSummary[]> {
 }
 
 export async function loadAllData(): Promise<{
-  articles: Article[];
   supplierContracts: SupplierContract[];
   clientContracts: ClientContract[];
   suppliers: Partner[];
   clients: Partner[];
   positions: PositionSummary[];
 }> {
-  const [articles, supplierContracts, clientContracts, suppliers, clients, positions] = await Promise.all([
-    loadArticles(),
+  const [supplierContracts, clientContracts, suppliers, clients, positions] = await Promise.all([
     loadSupplierContracts(),
     loadClientContracts(),
     loadSuppliers(),
@@ -174,5 +153,5 @@ export async function loadAllData(): Promise<{
     loadPositions()
   ]);
 
-  return { articles, supplierContracts, clientContracts, suppliers, clients, positions };
+  return { supplierContracts, clientContracts, suppliers, clients, positions };
 }

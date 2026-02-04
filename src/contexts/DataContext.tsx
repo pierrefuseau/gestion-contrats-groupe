@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
-import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
+import type { SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
 import { loadAllData } from '../services/dataService';
 
 interface DataContextType {
-  articles: Article[];
   supplierContracts: SupplierContract[];
   clientContracts: ClientContract[];
   partners: Partner[];
@@ -16,7 +15,6 @@ interface DataContextType {
   lastUpdated: Date | null;
   refresh: () => Promise<void>;
   forceRefresh: () => Promise<void>;
-  getArticleBySku: (sku: string) => Article | undefined;
   getSupplierContractsBySku: (sku: string) => SupplierContract[];
   getClientContractsBySku: (sku: string) => ClientContract[];
   getPartnerByCode: (code: string) => Partner | undefined;
@@ -28,7 +26,6 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [articles, setArticles] = useState<Article[]>([]);
   const [supplierContracts, setSupplierContracts] = useState<SupplierContract[]>([]);
   const [clientContracts, setClientContracts] = useState<ClientContract[]>([]);
   const [suppliers, setSuppliers] = useState<Partner[]>([]);
@@ -46,7 +43,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       const data = await loadAllData();
 
-      setArticles(data.articles);
       setSupplierContracts(data.supplierContracts);
       setClientContracts(data.clientContracts);
       setSuppliers(data.suppliers);
@@ -88,9 +84,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   const indexes = useMemo(() => {
-    const articlesBySku = new Map<string, Article>();
-    articles.forEach(a => articlesBySku.set(a.sku.toLowerCase(), a));
-
     const supplierContractsBySku = new Map<string, SupplierContract[]>();
     const supplierContractsByCode = new Map<string, SupplierContract[]>();
     supplierContracts.forEach(c => {
@@ -130,7 +123,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     positions.forEach(p => positionsBySku.set(p.sku.toLowerCase(), p));
 
     return {
-      articlesBySku,
       supplierContractsBySku,
       clientContractsBySku,
       supplierContractsByCode,
@@ -138,14 +130,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       partnersByCode,
       positionsBySku
     };
-  }, [articles, supplierContracts, clientContracts, partners, positions]);
-
-  const getArticleBySku = useCallback(
-    (sku: string) => {
-      return indexes.articlesBySku.get(sku.toLowerCase());
-    },
-    [indexes]
-  );
+  }, [supplierContracts, clientContracts, partners, positions]);
 
   const getSupplierContractsBySku = useCallback(
     (sku: string) => {
@@ -191,7 +176,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   return (
     <DataContext.Provider value={{
-      articles,
       supplierContracts,
       clientContracts,
       partners,
@@ -204,7 +188,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       lastUpdated,
       refresh,
       forceRefresh,
-      getArticleBySku,
       getSupplierContractsBySku,
       getClientContractsBySku,
       getPartnerByCode,

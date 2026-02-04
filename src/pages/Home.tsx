@@ -7,7 +7,7 @@ import { LoadingScreen } from '../components/LoadingScreen';
 
 export function Home() {
   const navigate = useNavigate();
-  const { articles, supplierContracts, clientContracts, isLoading, isReady, lastUpdated, forceRefresh } = useData();
+  const { positions, supplierContracts, clientContracts, isLoading, isReady, lastUpdated, forceRefresh } = useData();
 
   const stats = useMemo(() => {
     const uniqueSuppliers = new Set(
@@ -16,9 +16,9 @@ export function Home() {
     const uniqueClients = new Set(
       clientContracts.filter(c => c.status === 'active').map(c => c.client_code)
     ).size;
-    const totalProducts = articles.length;
+    const totalProducts = positions.length;
     return { uniqueSuppliers, uniqueClients, totalProducts };
-  }, [articles, supplierContracts, clientContracts]);
+  }, [positions, supplierContracts, clientContracts]);
 
   if (isLoading && !isReady) {
     return <LoadingScreen />;
