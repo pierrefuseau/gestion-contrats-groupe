@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, AlertTriangle, TrendingUp, TrendingDown, Warehouse, Factory, Users, Scale } from 'lucide-react';
+import { Package, AlertTriangle, TrendingUp, TrendingDown, Warehouse, Factory, Users, Scale } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { formatPriceWithUnit } from '../utils/formatters';
+import { PageHeader } from '../components/PageHeader';
 
 export function ProductDetailNew() {
   const { sku } = useParams<{ sku: string }>();
@@ -62,20 +63,7 @@ export function ProductDetailNew() {
   if (!position) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="bg-white border-b border-border px-6 py-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <button
-              onClick={() => navigate('/produits')}
-              className="flex items-center gap-2 text-primary hover:text-accent transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Produits</span>
-            </button>
-            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Package className="w-5 h-5 text-accent" />
-            </div>
-          </div>
-        </header>
+        <PageHeader backTo="/produits" backLabel="Produits" />
         <main className="max-w-4xl mx-auto px-6 py-16 text-center">
           <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
           <h1 className="text-xl font-semibold text-primary mb-2">Produit introuvable</h1>
@@ -87,20 +75,7 @@ export function ProductDetailNew() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-white border-b border-border px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <button
-            onClick={() => navigate('/produits')}
-            className="flex items-center gap-2 text-primary hover:text-accent transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Produits</span>
-          </button>
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Package className="w-5 h-5 text-accent" />
-          </div>
-        </div>
-      </header>
+      <PageHeader backTo="/produits" backLabel="Produits" />
 
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
