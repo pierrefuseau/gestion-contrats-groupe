@@ -1,7 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Factory, Users, Package, X } from 'lucide-react';
-import { globalSearch, type SearchResult } from '../services/searchEngine';
+import { useData } from '../contexts/DataContext';
+
+interface SearchResult {
+  id: string;
+  type: 'supplier' | 'client' | 'product';
+  code: string;
+  primaryText: string;
+  secondaryText: string;
+}
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -16,6 +24,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export function GlobalSearch() {
   const navigate = useNavigate();
+  const { partners, positions } = useData();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -25,15 +34,59 @@ export function GlobalSearch() {
 
   const debouncedQuery = useDebounce(query, 50);
 
+  const searchData = useMemo(() => {
+    const suppliers = partners.filter(p => p.type === 'supplier');
+    const clients = partners.filter(p => p.type === 'client');
+    return { suppliers, clients, positions };
+  }, [partners, positions]);
+
   useEffect(() => {
     if (debouncedQuery.length < 2) {
       setResults([]);
       return;
     }
 
-    const searchResults = globalSearch(debouncedQuery, 15);
-    setResults(searchResults);
-  }, [debouncedQuery]);
+    const q = debouncedQuery.toLowerCase();
+    const searchResults: SearchResult[] = [];
+
+    searchData.suppliers.forEach(s => {
+      if (s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)) {
+        searchResults.push({
+          id: `supplier-${s.code}`,
+          type: 'supplier',
+          code: s.code,
+          primaryText: s.name,
+          secondaryText: `${s.contracts_count} contrats actifs`
+        });
+      }
+    });
+
+    searchData.clients.forEach(c => {
+      if (c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)) {
+        searchResults.push({
+          id: `client-${c.code}`,
+          type: 'client',
+          code: c.code,
+          primaryText: c.name,
+          secondaryText: `${c.contracts_count} contrats actifs`
+        });
+      }
+    });
+
+    searchData.positions.forEach(p => {
+      if (p.article_name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) {
+        searchResults.push({
+          id: `product-${p.sku}`,
+          type: 'product',
+          code: p.sku,
+          primaryText: p.article_name,
+          secondaryText: `SKU: ${p.sku}`
+        });
+      }
+    });
+
+    setResults(searchResults.slice(0, 15));
+  }, [debouncedQuery, searchData]);
 
   const clear = useCallback(() => {
     setQuery('');

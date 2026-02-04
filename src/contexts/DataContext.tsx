@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Article, SupplierContract, ClientContract, Partner, PositionSummary } from '../types';
-import { initializeData } from '../services/syncService';
-import { buildSearchIndexesFromData } from '../services/searchEngine';
+import { loadAllData } from '../services/dataService';
 
 interface DataContextType {
   articles: Article[];
@@ -28,138 +27,6 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | null>(null);
 
-function calculatePartners(
-  supplierContracts: SupplierContract[],
-  clientContracts: ClientContract[]
-): { suppliers: Partner[]; clients: Partner[] } {
-  const supplierMap = new Map<string, { name: string; contracts: number; volumeKg: number }>();
-  const clientMap = new Map<string, { name: string; contracts: number; volumeKg: number }>();
-
-  supplierContracts.forEach(contract => {
-    if (contract.status === 'active') {
-      const existing = supplierMap.get(contract.supplier_code);
-      if (existing) {
-        existing.contracts++;
-        existing.volumeKg += contract.qty_contracted_kg;
-      } else {
-        supplierMap.set(contract.supplier_code, {
-          name: contract.supplier_name,
-          contracts: 1,
-          volumeKg: contract.qty_contracted_kg
-        });
-      }
-    }
-  });
-
-  clientContracts.forEach(contract => {
-    if (contract.status === 'active') {
-      const existing = clientMap.get(contract.client_code);
-      if (existing) {
-        existing.contracts++;
-        existing.volumeKg += contract.qty_contracted_kg;
-      } else {
-        clientMap.set(contract.client_code, {
-          name: contract.client_name,
-          contracts: 1,
-          volumeKg: contract.qty_contracted_kg
-        });
-      }
-    }
-  });
-
-  const suppliers: Partner[] = Array.from(supplierMap.entries()).map(([code, data]) => ({
-    code,
-    name: data.name,
-    type: 'supplier' as const,
-    contracts_count: data.contracts,
-    total_volume_kg: data.volumeKg
-  }));
-
-  const clients: Partner[] = Array.from(clientMap.entries()).map(([code, data]) => ({
-    code,
-    name: data.name,
-    type: 'client' as const,
-    contracts_count: data.contracts,
-    total_volume_kg: data.volumeKg
-  }));
-
-  return { suppliers, clients };
-}
-
-function calculatePositions(
-  articles: Article[],
-  supplierContracts: SupplierContract[],
-  clientContracts: ClientContract[]
-): PositionSummary[] {
-  const skuSet = new Set<string>();
-  articles.forEach(a => skuSet.add(a.sku));
-  supplierContracts.forEach(c => skuSet.add(c.sku));
-  clientContracts.forEach(c => skuSet.add(c.sku));
-
-  const positions: PositionSummary[] = [];
-
-  skuSet.forEach(sku => {
-    const article = articles.find(a => a.sku === sku);
-    const supContracts = supplierContracts.filter(c => c.sku === sku && c.status === 'active');
-    const cliContracts = clientContracts.filter(c => c.sku === sku && c.status === 'active');
-
-    const stock_kg = article?.stock_kg || 0;
-    const stock_uvc = article?.stock_uvc || 0;
-    const supply_remaining_kg = supContracts.reduce((sum, c) => sum + c.qty_remaining_kg, 0);
-    const supply_remaining_uvc = supContracts.reduce((sum, c) => sum + c.qty_remaining_uvc, 0);
-    const supply_in_transit_kg = supContracts.reduce((sum, c) => sum + c.qty_in_transit_kg, 0);
-    const supply_in_transit_uvc = supContracts.reduce((sum, c) => sum + c.qty_in_transit_uvc, 0);
-    const demand_remaining_kg = cliContracts.reduce((sum, c) => sum + c.qty_remaining_kg, 0);
-    const demand_remaining_uvc = cliContracts.reduce((sum, c) => sum + c.qty_remaining_uvc, 0);
-    const total_available_kg = stock_kg + supply_remaining_kg + supply_in_transit_kg;
-    const net_position_kg = total_available_kg - demand_remaining_kg;
-    const net_position_uvc = stock_uvc + supply_remaining_uvc + supply_in_transit_uvc - demand_remaining_uvc;
-
-    let status: 'LONG' | 'SHORT' | 'CRITICAL' = 'LONG';
-    if (net_position_kg < -100) {
-      status = 'CRITICAL';
-    } else if (net_position_kg < 0) {
-      status = 'SHORT';
-    }
-
-    const totalBuyValue = supContracts.reduce((sum, c) => sum + (c.price_buy * c.qty_contracted_kg), 0);
-    const totalBuyQty = supContracts.reduce((sum, c) => sum + c.qty_contracted_kg, 0);
-    const avg_buy_price = totalBuyQty > 0 ? totalBuyValue / totalBuyQty : 0;
-
-    const totalSellValue = cliContracts.reduce((sum, c) => sum + (c.price_sell * c.qty_contracted_kg), 0);
-    const totalSellQty = cliContracts.reduce((sum, c) => sum + c.qty_contracted_kg, 0);
-    const avg_sell_price = totalSellQty > 0 ? totalSellValue / totalSellQty : 0;
-
-    const margin_percent = avg_buy_price > 0 ? ((avg_sell_price - avg_buy_price) / avg_buy_price) * 100 : 0;
-
-    const articleName = article?.name || supContracts[0]?.article_name || cliContracts[0]?.article_name || sku;
-
-    positions.push({
-      sku,
-      article_name: articleName,
-      stock_kg,
-      stock_uvc,
-      supply_remaining_kg,
-      supply_remaining_uvc,
-      supply_in_transit_kg,
-      supply_in_transit_uvc,
-      demand_remaining_kg,
-      demand_remaining_uvc,
-      total_available_kg,
-      net_position_kg,
-      net_position_uvc,
-      status,
-      supplier_contracts: supContracts.length,
-      client_contracts: cliContracts.length,
-      avg_buy_price,
-      avg_sell_price,
-      margin_percent
-    });
-  });
-
-  return positions.sort((a, b) => a.net_position_kg - b.net_position_kg);
-}
-
 export function DataProvider({ children }: { children: ReactNode }) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [supplierContracts, setSupplierContracts] = useState<SupplierContract[]>([]);
@@ -172,42 +39,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const loadData = useCallback(async (force: boolean = false) => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const data = await initializeData(
-        (message) => console.log(message),
-        (freshData) => {
-          setArticles(freshData.articles);
-          setSupplierContracts(freshData.supplierContracts);
-          setClientContracts(freshData.clientContracts);
-
-          const { suppliers: newSuppliers, clients: newClients } = calculatePartners(freshData.supplierContracts, freshData.clientContracts);
-          setSuppliers(newSuppliers);
-          setClients(newClients);
-
-          const newPositions = calculatePositions(freshData.articles, freshData.supplierContracts, freshData.clientContracts);
-          setPositions(newPositions);
-
-          buildSearchIndexesFromData(freshData.articles, freshData.supplierContracts, freshData.clientContracts);
-          setLastUpdated(new Date());
-        }
-      );
+      const data = await loadAllData();
 
       setArticles(data.articles);
       setSupplierContracts(data.supplierContracts);
       setClientContracts(data.clientContracts);
-
-      const { suppliers: initialSuppliers, clients: initialClients } = calculatePartners(data.supplierContracts, data.clientContracts);
-      setSuppliers(initialSuppliers);
-      setClients(initialClients);
-
-      const initialPositions = calculatePositions(data.articles, data.supplierContracts, data.clientContracts);
-      setPositions(initialPositions);
-
-      buildSearchIndexesFromData(data.articles, data.supplierContracts, data.clientContracts);
+      setSuppliers(data.suppliers);
+      setClients(data.clients);
+      setPositions(data.positions);
       setLastUpdated(new Date());
       setIsReady(true);
     } catch (err) {
@@ -220,15 +64,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    loadData(false);
+    loadData();
   }, [loadData]);
 
   const refresh = useCallback(async () => {
-    await loadData(false);
+    await loadData();
   }, [loadData]);
 
   const forceRefresh = useCallback(async () => {
-    await loadData(true);
+    await loadData();
   }, [loadData]);
 
   const partners = useMemo(() => [...suppliers, ...clients], [suppliers, clients]);
