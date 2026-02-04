@@ -31,6 +31,7 @@ export function SupplierDetail() {
       article_name: string;
       contractsCount: number;
       qty_remaining_kg: number;
+      qty_contracted_kg: number;
       qty_in_transit_kg: number;
       avg_price: number;
       price_unit: string;
@@ -48,6 +49,7 @@ export function SupplierDetail() {
           ...existing,
           contractsCount: existing.contractsCount + 1,
           qty_remaining_kg: totalQty,
+          qty_contracted_kg: existing.qty_contracted_kg + contract.qty_contracted_kg,
           qty_in_transit_kg: existing.qty_in_transit_kg + contract.qty_in_transit_kg,
           avg_price: weightedPrice,
         });
@@ -57,6 +59,7 @@ export function SupplierDetail() {
           article_name: contract.article_name,
           contractsCount: 1,
           qty_remaining_kg: contract.qty_remaining_kg,
+          qty_contracted_kg: contract.qty_contracted_kg,
           qty_in_transit_kg: contract.qty_in_transit_kg,
           avg_price: contract.price_buy,
           price_unit: contract.price_unit,
@@ -164,6 +167,7 @@ export function SupplierDetail() {
                 <div className="flex items-center gap-4 mt-2 text-sm">
                   <span className="text-primary">
                     Reste: <strong>{formatWeight(product.qty_remaining_kg)}</strong>
+                    <span className="text-muted font-normal"> / {formatWeight(product.qty_contracted_kg)}</span>
                   </span>
                   <span className="text-muted">|</span>
                   <span className="text-primary">

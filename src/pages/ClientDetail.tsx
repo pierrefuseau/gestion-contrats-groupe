@@ -111,14 +111,11 @@ export function ClientDetail() {
                 <div className="flex items-center gap-4 mt-2 text-sm">
                   <span className="text-primary">
                     A livrer: <strong>{formatWeight(contract.qty_remaining_kg)}</strong>
+                    <span className="text-muted font-normal"> / {formatWeight(contract.qty_contracted_kg)}</span>
                   </span>
                   <span className="text-muted">|</span>
                   <span className="text-primary">
                     Prix: <strong>{formatPrice(contract.price_sell)}/kg</strong>
-                  </span>
-                  <span className="text-muted">|</span>
-                  <span className="text-muted">
-                    Livre: {formatWeight(contract.qty_purchased_kg)}
                   </span>
                 </div>
               </button>

@@ -183,6 +183,7 @@ export function ProductDetailNew() {
                   <div className="flex items-center gap-4 mt-2 text-sm">
                     <span className="text-success">
                       Reste: <strong>{formatWeight(contract.qty_remaining_kg)}</strong>
+                      <span className="text-muted font-normal"> / {formatWeight(contract.qty_contracted_kg)}</span>
                     </span>
                     <span className="text-muted">|</span>
                     <span className="text-primary">
@@ -226,6 +227,7 @@ export function ProductDetailNew() {
                   <div className="flex items-center gap-4 mt-2 text-sm">
                     <span className="text-danger">
                       A livrer: <strong>{formatWeight(contract.qty_remaining_kg)}</strong>
+                      <span className="text-muted font-normal"> / {formatWeight(contract.qty_contracted_kg)}</span>
                     </span>
                     <span className="text-muted">|</span>
                     <span className="text-primary">
