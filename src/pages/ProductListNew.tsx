@@ -28,7 +28,7 @@ export function ProductListNew() {
       );
     }
 
-    return result.sort((a, b) => a.net_position_kg - b.net_position_kg);
+    return result.sort((a, b) => a.article_name.localeCompare(b.article_name, 'fr'));
   }, [positions, search, filter]);
 
   const stats = useMemo(() => ({

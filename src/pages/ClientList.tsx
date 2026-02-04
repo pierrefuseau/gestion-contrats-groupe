@@ -33,7 +33,7 @@ export function ClientList() {
         }
       });
 
-    return Array.from(map.values()).sort((a, b) => b.totalKg - a.totalKg);
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   }, [clientContracts]);
 
   const filtered = useMemo(() => {

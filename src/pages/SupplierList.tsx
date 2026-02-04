@@ -33,7 +33,7 @@ export function SupplierList() {
         }
       });
 
-    return Array.from(map.values()).sort((a, b) => b.totalKg - a.totalKg);
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   }, [supplierContracts]);
 
   const filtered = useMemo(() => {

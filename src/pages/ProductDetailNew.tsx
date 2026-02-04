@@ -13,8 +13,20 @@ export function ProductDetailNew() {
   const supplierContracts = sku ? getSupplierContractsBySku(sku) : [];
   const clientContracts = sku ? getClientContractsBySku(sku) : [];
 
-  const activeSupplierContracts = supplierContracts.filter(c => c.status === 'active');
-  const activeClientContracts = clientContracts.filter(c => c.status === 'active');
+  const activeSupplierContracts = supplierContracts
+    .filter(c => c.status === 'active')
+    .sort((a, b) => {
+      const dateA = a.date_start ? new Date(a.date_start).getTime() : 0;
+      const dateB = b.date_start ? new Date(b.date_start).getTime() : 0;
+      return dateB - dateA;
+    });
+  const activeClientContracts = clientContracts
+    .filter(c => c.status === 'active')
+    .sort((a, b) => {
+      const dateA = a.date_start ? new Date(a.date_start).getTime() : 0;
+      const dateB = b.date_start ? new Date(b.date_start).getTime() : 0;
+      return dateB - dateA;
+    });
 
   const formatWeight = (kg: number) => {
     if (Math.abs(kg) >= 1000) return `${(kg / 1000).toFixed(1)} T`;

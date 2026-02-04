@@ -14,7 +14,9 @@ export function SupplierDetail() {
       .filter(c => c.supplier_code === code)
       .sort((a, b) => {
         if (a.status !== b.status) return a.status === 'active' ? -1 : 1;
-        return b.qty_remaining_kg - a.qty_remaining_kg;
+        const dateA = a.date_start ? new Date(a.date_start).getTime() : 0;
+        const dateB = b.date_start ? new Date(b.date_start).getTime() : 0;
+        return dateB - dateA;
       });
   }, [supplierContracts, code]);
 
