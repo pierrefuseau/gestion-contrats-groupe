@@ -76,11 +76,11 @@ export async function loadSuppliers(): Promise<Partner[]> {
   }
 
   return (data || []).map(row => ({
-    code: row.code || '',
-    name: row.name || 'Fournisseur Inconnu',
+    code: row.supplier_code || '',
+    name: row.supplier_name || 'Fournisseur Inconnu',
     type: 'supplier' as const,
-    contracts_count: Number(row.contracts_count) || 0,
-    total_volume_kg: Number(row.total_volume_kg) || 0
+    contracts_count: Number(row.active_contracts) || 0,
+    total_volume_kg: Number(row.total_remaining_kg) || 0
   }));
 }
 
@@ -96,11 +96,11 @@ export async function loadClients(): Promise<Partner[]> {
   }
 
   return (data || []).map(row => ({
-    code: row.code || '',
-    name: row.name || 'Client Inconnu',
+    code: row.client_code || '',
+    name: row.client_name || 'Client Inconnu',
     type: 'client' as const,
-    contracts_count: Number(row.contracts_count) || 0,
-    total_volume_kg: Number(row.total_volume_kg) || 0
+    contracts_count: Number(row.active_contracts) || 0,
+    total_volume_kg: Number(row.total_remaining_kg) || 0
   }));
 }
 
