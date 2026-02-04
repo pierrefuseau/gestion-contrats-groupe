@@ -4,7 +4,8 @@ import type { Article, SupplierContract, ClientContract, Partner, PositionSummar
 export async function loadArticles(): Promise<Article[]> {
   const { data, error } = await supabase
     .from('articles')
-    .select('sku, name, stock_uvc, stock_kg');
+    .select('sku, name, stock_uvc, stock_kg')
+    .limit(15000);
 
   if (error) {
     console.error('Erreur chargement articles:', error);
@@ -22,7 +23,8 @@ export async function loadArticles(): Promise<Article[]> {
 export async function loadSupplierContracts(): Promise<SupplierContract[]> {
   const { data, error } = await supabase
     .from('supplier_contracts')
-    .select('*');
+    .select('*')
+    .limit(15000);
 
   if (error) {
     console.error('Erreur chargement contrats fournisseurs:', error);
@@ -54,7 +56,8 @@ export async function loadSupplierContracts(): Promise<SupplierContract[]> {
 export async function loadClientContracts(): Promise<ClientContract[]> {
   const { data, error } = await supabase
     .from('client_contracts')
-    .select('*');
+    .select('*')
+    .limit(15000);
 
   if (error) {
     console.error('Erreur chargement contrats clients:', error);
@@ -83,7 +86,8 @@ export async function loadClientContracts(): Promise<ClientContract[]> {
 export async function loadSuppliers(): Promise<Partner[]> {
   const { data, error } = await supabase
     .from('suppliers_view')
-    .select('*');
+    .select('*')
+    .limit(5000);
 
   if (error) {
     console.error('Erreur chargement fournisseurs:', error);
@@ -102,7 +106,8 @@ export async function loadSuppliers(): Promise<Partner[]> {
 export async function loadClients(): Promise<Partner[]> {
   const { data, error } = await supabase
     .from('clients_view')
-    .select('*');
+    .select('*')
+    .limit(5000);
 
   if (error) {
     console.error('Erreur chargement clients:', error);
@@ -121,7 +126,8 @@ export async function loadClients(): Promise<Partner[]> {
 export async function loadPositions(): Promise<PositionSummary[]> {
   const { data, error } = await supabase
     .from('positions_view')
-    .select('*');
+    .select('*')
+    .limit(15000);
 
   if (error) {
     console.error('Erreur chargement positions:', error);
