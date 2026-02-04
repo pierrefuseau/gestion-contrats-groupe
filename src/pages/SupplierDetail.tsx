@@ -67,7 +67,7 @@ export function SupplierDetail() {
       }
     }
 
-    return Array.from(groups.values()).sort((a, b) => b.qty_remaining_kg - a.qty_remaining_kg);
+    return Array.from(groups.values()).sort((a, b) => a.article_name.localeCompare(b.article_name, 'fr'));
   }, [activeContracts]);
 
   const stats = useMemo(() => ({

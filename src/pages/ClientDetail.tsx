@@ -20,8 +20,12 @@ export function ClientDetail() {
       });
   }, [clientContracts, code]);
 
-  const activeContracts = contracts.filter(c => c.status === 'active');
-  const completedContracts = contracts.filter(c => c.status === 'completed');
+  const activeContracts = contracts
+    .filter(c => c.status === 'active')
+    .sort((a, b) => a.article_name.localeCompare(b.article_name, 'fr'));
+  const completedContracts = contracts
+    .filter(c => c.status === 'completed')
+    .sort((a, b) => a.article_name.localeCompare(b.article_name, 'fr'));
   const clientName = contracts[0]?.client_name || 'Client';
 
   const stats = useMemo(() => ({
