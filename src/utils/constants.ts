@@ -24,7 +24,7 @@ export const UI_STRINGS = {
   label_client: 'Client',
   label_product: 'Produit',
   label_stock: 'Stock physique',
-  label_position: 'Position nette',
+  label_position: 'Reste à Contracter',
   label_remaining: 'Reste à livrer',
   label_transit: 'En transit',
   label_delivered: 'Livré',

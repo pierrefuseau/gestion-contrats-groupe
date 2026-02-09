@@ -125,7 +125,7 @@ export function ProductDetailNew() {
             </div>
 
             <div className="flex items-center justify-between py-4 bg-surface-alt rounded-lg px-4 -mx-4">
-              <span className="text-lg font-semibold text-primary">Position nette</span>
+              <span className="text-lg font-semibold text-primary">Reste à Contracter</span>
               <span className={`text-xl font-bold ${position.net_position_kg >= 0 ? 'text-success' : 'text-danger'}`}>
                 {position.net_position_kg >= 0 ? '+' : ''}{formatWeight(position.net_position_kg)}
               </span>
