@@ -72,21 +72,21 @@ export function ProductDetailNew() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+            <div className="w-14 h-14 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
               <Package className="w-7 h-7 text-accent" />
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold text-primary">{position.article_name}</h1>
               <p className="text-muted">SKU: {sku}</p>
             </div>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${getStatusColor(position.status)}`}>
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${getStatusColor(position.status)}`}>
               {getStatusIcon(position.status)}
               <span className="font-semibold">{position.status}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-6 mb-8">
+        <div className="bg-white rounded-xl border border-border p-6 mb-8 shadow">
           <h2 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
             <Scale className="w-5 h-5 text-accent" />
             Bilan de position
@@ -164,7 +164,7 @@ export function ProductDetailNew() {
                   key={idx}
                   onClick={() => navigate(`/fournisseurs/${contract.supplier_code}`)}
                   className="w-full bg-white rounded-xl border border-border p-4 text-left
-                            hover:border-accent hover:shadow-md transition-all group"
+                            hover:shadow-md hover:-translate-y-px transition-all duration-200 group"
                 >
                   <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">
                     {contract.supplier_name}
@@ -208,7 +208,7 @@ export function ProductDetailNew() {
                   key={idx}
                   onClick={() => navigate(`/clients/${contract.client_code}`)}
                   className="w-full bg-white rounded-xl border border-border p-4 text-left
-                            hover:border-accent hover:shadow-md transition-all group"
+                            hover:shadow-md hover:-translate-y-px transition-all duration-200 group"
                 >
                   <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">
                     {contract.client_name}

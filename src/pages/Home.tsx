@@ -33,7 +33,7 @@ export function Home() {
           className="h-20 object-contain mb-6"
         />
 
-        <h1 className="text-3xl font-bold text-primary mb-2 text-center">
+        <h1 className="text-2xl font-bold text-primary mb-2 text-center">
           Gestion Contrats
         </h1>
 
@@ -44,13 +44,13 @@ export function Home() {
         <div className="flex flex-wrap justify-center gap-6">
           <button
             onClick={() => navigate('/fournisseurs')}
-            className="group w-52 h-44 bg-white rounded-2xl border border-border
-                      shadow-sm hover:shadow-lg hover:-translate-y-1
+            className="group w-52 h-44 bg-white rounded-xl border border-border
+                      shadow hover:shadow-md hover:-translate-y-1
                       transition-all duration-200 flex flex-col items-center justify-center gap-3"
           >
-            <div className="w-16 h-16 rounded-2xl bg-background flex items-center justify-center
-                          group-hover:bg-accent/10 transition-colors">
-              <Factory className="w-8 h-8 text-accent" />
+            <div className="w-14 h-14 rounded-lg bg-success flex items-center justify-center
+                          group-hover:scale-105 transition-transform">
+              <Factory className="w-7 h-7 text-white" />
             </div>
             <span className="text-lg font-semibold text-primary">Fournisseurs</span>
             <span className="text-sm text-muted">{stats.uniqueSuppliers} actifs</span>
@@ -58,13 +58,13 @@ export function Home() {
 
           <button
             onClick={() => navigate('/clients')}
-            className="group w-52 h-44 bg-white rounded-2xl border border-border
-                      shadow-sm hover:shadow-lg hover:-translate-y-1
+            className="group w-52 h-44 bg-white rounded-xl border border-border
+                      shadow hover:shadow-md hover:-translate-y-1
                       transition-all duration-200 flex flex-col items-center justify-center gap-3"
           >
-            <div className="w-16 h-16 rounded-2xl bg-background flex items-center justify-center
-                          group-hover:bg-accent/10 transition-colors">
-              <Users className="w-8 h-8 text-accent" />
+            <div className="w-14 h-14 rounded-lg bg-info flex items-center justify-center
+                          group-hover:scale-105 transition-transform">
+              <Users className="w-7 h-7 text-white" />
             </div>
             <span className="text-lg font-semibold text-primary">Clients</span>
             <span className="text-sm text-muted">{stats.uniqueClients} actifs</span>
@@ -72,13 +72,13 @@ export function Home() {
 
           <button
             onClick={() => navigate('/produits')}
-            className="group w-52 h-44 bg-white rounded-2xl border border-border
-                      shadow-sm hover:shadow-lg hover:-translate-y-1
+            className="group w-52 h-44 bg-white rounded-xl border border-border
+                      shadow hover:shadow-md hover:-translate-y-1
                       transition-all duration-200 flex flex-col items-center justify-center gap-3"
           >
-            <div className="w-16 h-16 rounded-2xl bg-background flex items-center justify-center
-                          group-hover:bg-accent/10 transition-colors">
-              <Package className="w-8 h-8 text-accent" />
+            <div className="w-14 h-14 rounded-lg bg-accent flex items-center justify-center
+                          group-hover:scale-105 transition-transform">
+              <Package className="w-7 h-7 text-white" />
             </div>
             <span className="text-lg font-semibold text-primary">Produits</span>
             <span className="text-sm text-muted">{stats.totalProducts} references</span>
@@ -96,13 +96,13 @@ export function Home() {
         </button>
 
         {lastUpdated && (
-          <p className="mt-2 text-xs text-muted">
+          <p className="mt-2 text-xs text-text-light">
             Derniere sync: {lastUpdated.toLocaleTimeString('fr-FR')}
           </p>
         )}
       </main>
 
-      <footer className="py-6 text-center text-sm text-muted">
+      <footer className="py-6 text-center text-sm text-text-light">
         2026 Groupe FUSEAU - Tous droits reserves
       </footer>
     </div>

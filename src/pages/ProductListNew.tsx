@@ -78,10 +78,10 @@ export function ProductListNew() {
         <div className="grid grid-cols-4 gap-3 mb-6">
           <button
             onClick={() => setFilter('all')}
-            className={`p-3 rounded-xl border text-center transition-all ${
+            className={`p-3 rounded-lg border text-center transition-all duration-200 ${
               filter === 'all'
-                ? 'bg-primary text-white border-primary'
-                : 'bg-white border-border hover:border-primary'
+                ? 'bg-slate-900 text-white border-slate-900 shadow-md'
+                : 'bg-white border-border hover:border-slate-300 hover:bg-background'
             }`}
           >
             <div className="text-lg font-bold">{stats.total}</div>
@@ -89,10 +89,10 @@ export function ProductListNew() {
           </button>
           <button
             onClick={() => setFilter('critical')}
-            className={`p-3 rounded-xl border text-center transition-all ${
+            className={`p-3 rounded-lg border text-center transition-all duration-200 ${
               filter === 'critical'
-                ? 'bg-danger text-white border-danger'
-                : 'bg-white border-border hover:border-danger'
+                ? 'bg-danger text-white border-danger shadow-md'
+                : 'bg-white border-border hover:border-red-300 hover:bg-red-50'
             }`}
           >
             <div className="text-lg font-bold">{stats.critical}</div>
@@ -100,10 +100,10 @@ export function ProductListNew() {
           </button>
           <button
             onClick={() => setFilter('short')}
-            className={`p-3 rounded-xl border text-center transition-all ${
+            className={`p-3 rounded-lg border text-center transition-all duration-200 ${
               filter === 'short'
-                ? 'bg-warning text-white border-warning'
-                : 'bg-white border-border hover:border-warning'
+                ? 'bg-warning text-white border-warning shadow-md'
+                : 'bg-white border-border hover:border-amber-300 hover:bg-amber-50'
             }`}
           >
             <div className="text-lg font-bold">{stats.short}</div>
@@ -111,10 +111,10 @@ export function ProductListNew() {
           </button>
           <button
             onClick={() => setFilter('long')}
-            className={`p-3 rounded-xl border text-center transition-all ${
+            className={`p-3 rounded-lg border text-center transition-all duration-200 ${
               filter === 'long'
-                ? 'bg-success text-white border-success'
-                : 'bg-white border-border hover:border-success'
+                ? 'bg-success text-white border-success shadow-md'
+                : 'bg-white border-border hover:border-emerald-300 hover:bg-emerald-50'
             }`}
           >
             <div className="text-lg font-bold">{stats.long}</div>
@@ -129,10 +129,10 @@ export function ProductListNew() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un produit..."
-            className="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-border
-                      text-primary placeholder-muted
-                      focus:border-primary focus:ring-4 focus:ring-primary/10
-                      transition-all"
+            className="w-full h-10 pl-12 pr-4 bg-white rounded-lg border border-border
+                      text-primary placeholder-text-light text-sm
+                      focus:border-accent focus:ring-4 focus:ring-accent/10
+                      transition-all duration-150"
           />
         </div>
 
@@ -142,8 +142,8 @@ export function ProductListNew() {
               key={position.sku}
               onClick={() => navigate(`/produits/${position.sku}`)}
               className="w-full bg-white rounded-xl border border-border p-4
-                        hover:border-accent hover:shadow-md
-                        transition-all text-left group"
+                        hover:shadow-md hover:-translate-y-px
+                        transition-all duration-200 text-left group"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -163,7 +163,7 @@ export function ProductListNew() {
                     </span>
                     <span className="text-muted">|</span>
                     <span className={position.net_position_kg >= 0 ? 'text-success' : 'text-danger'}>
-                      Position: <strong>{position.net_position_kg >= 0 ? '+' : ''}{formatWeight(position.net_position_kg)}</strong>
+                      Reste a Contracter: <strong>{position.net_position_kg >= 0 ? '+' : ''}{formatWeight(position.net_position_kg)}</strong>
                     </span>
                   </div>
                 </div>

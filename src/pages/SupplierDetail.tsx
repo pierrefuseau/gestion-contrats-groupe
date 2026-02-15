@@ -115,7 +115,7 @@ export function SupplierDetail() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
               <Factory className="w-6 h-6 text-accent" />
             </div>
             <div>
@@ -125,21 +125,27 @@ export function SupplierDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl border border-border p-4 text-center">
-            <FileText className="w-5 h-5 text-accent mx-auto mb-2" />
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl border border-border p-6 text-center shadow hover:shadow-md hover:-translate-y-px transition-all duration-200">
+            <div className="w-12 h-12 rounded-lg bg-info/10 flex items-center justify-center mx-auto mb-3">
+              <FileText className="w-6 h-6 text-info" />
+            </div>
             <div className="text-2xl font-bold text-primary">{stats.contractsCount}</div>
-            <div className="text-sm text-muted">Contrats actifs</div>
+            <div className="text-xs uppercase tracking-wide font-medium text-muted mt-1">Contrats actifs</div>
           </div>
-          <div className="bg-white rounded-xl border border-border p-4 text-center">
-            <Scale className="w-5 h-5 text-accent mx-auto mb-2" />
+          <div className="bg-white rounded-xl border border-border p-6 text-center shadow hover:shadow-md hover:-translate-y-px transition-all duration-200">
+            <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center mx-auto mb-3">
+              <Scale className="w-6 h-6 text-success" />
+            </div>
             <div className="text-2xl font-bold text-primary">{formatWeight(stats.totalKg)}</div>
-            <div className="text-sm text-muted">Engagees</div>
+            <div className="text-xs uppercase tracking-wide font-medium text-muted mt-1">Engagees</div>
           </div>
-          <div className="bg-white rounded-xl border border-border p-4 text-center">
-            <Euro className="w-5 h-5 text-accent mx-auto mb-2" />
+          <div className="bg-white rounded-xl border border-border p-6 text-center shadow hover:shadow-md hover:-translate-y-px transition-all duration-200">
+            <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center mx-auto mb-3">
+              <Euro className="w-6 h-6 text-accent" />
+            </div>
             <div className="text-2xl font-bold text-primary">{formatPrice(stats.totalValue)}</div>
-            <div className="text-sm text-muted">Valeur</div>
+            <div className="text-xs uppercase tracking-wide font-medium text-muted mt-1">Valeur</div>
           </div>
         </div>
 
@@ -151,7 +157,7 @@ export function SupplierDetail() {
                 key={product.sku}
                 onClick={() => navigate(`/produits/${product.sku}`)}
                 className="w-full bg-white rounded-xl border border-border p-4 text-left
-                          hover:border-accent hover:shadow-md transition-all group"
+                          hover:shadow-md hover:-translate-y-px transition-all duration-200 group"
               >
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold text-primary group-hover:text-accent transition-colors">

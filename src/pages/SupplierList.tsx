@@ -71,10 +71,10 @@ export function SupplierList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un fournisseur..."
-            className="w-full h-12 pl-12 pr-4 bg-white rounded-xl border border-border
-                      text-primary placeholder-muted
-                      focus:border-primary focus:ring-4 focus:ring-primary/10
-                      transition-all"
+            className="w-full h-10 pl-12 pr-4 bg-white rounded-lg border border-border
+                      text-primary placeholder-text-light text-sm
+                      focus:border-accent focus:ring-4 focus:ring-accent/10
+                      transition-all duration-150"
           />
         </div>
 
@@ -84,8 +84,8 @@ export function SupplierList() {
               key={supplier.code}
               onClick={() => navigate(`/fournisseurs/${supplier.code}`)}
               className="w-full bg-white rounded-xl border border-border p-4
-                        hover:border-accent hover:shadow-md
-                        transition-all text-left group"
+                        hover:shadow-md hover:-translate-y-px
+                        transition-all duration-200 text-left group"
             >
               <div className="flex items-center justify-between">
                 <div>

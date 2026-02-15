@@ -168,9 +168,9 @@ export function GlobalSearch() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'supplier': return <Factory className="w-4 h-4 text-accent" />;
-      case 'client': return <Users className="w-4 h-4 text-accent" />;
-      case 'product': return <Package className="w-4 h-4 text-accent" />;
+      case 'supplier': return <Factory className="w-4 h-4 text-muted" />;
+      case 'client': return <Users className="w-4 h-4 text-muted" />;
+      case 'product': return <Package className="w-4 h-4 text-muted" />;
       default: return null;
     }
   };
@@ -198,10 +198,10 @@ export function GlobalSearch() {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Rechercher un fournisseur, client ou produit..."
-          className="w-full h-14 pl-12 pr-20 bg-white rounded-xl border border-border
-                     text-primary placeholder-muted
-                     focus:border-primary focus:ring-4 focus:ring-primary/10
-                     shadow-sm transition-all"
+          className="w-full h-14 pl-12 pr-20 bg-white rounded-lg border border-border
+                     text-primary placeholder-text-light
+                     focus:border-accent focus:ring-4 focus:ring-accent/10
+                     shadow-sm transition-all duration-150"
         />
 
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -223,8 +223,8 @@ export function GlobalSearch() {
       </div>
 
       {isOpen && query.length >= 2 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl
-                       shadow-xl border border-border overflow-hidden z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg
+                       shadow-lg border border-border overflow-hidden z-50 max-h-96 overflow-y-auto">
 
           {results.length === 0 && (
             <div className="p-6 text-center text-muted">
